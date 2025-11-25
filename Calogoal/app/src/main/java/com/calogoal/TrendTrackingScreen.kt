@@ -203,3 +203,30 @@ private fun isGoalMet(goalType: String, calories: Int, target: Int): Boolean {
         else          -> calories <= target
     }
 }
+
+@Preview(showBackground = true, showSystemUi = false)
+@Composable
+fun TrendTrackingScreenPreview() {
+    val vm = CalorieViewModel()
+
+    vm.updateProfile(
+        name = "Preview User",
+        targetCalories = 2200,
+        goalType = "Lose Weight"
+    )
+    val today = LocalDate.now()
+    val caloriesPerDay = listOf(1800, 2100, 2500, 1900, 2300, 2200, 2600)
+
+    caloriesPerDay.forEachIndexed { index, cals ->
+        val date = today.minusDays((6 - index).toLong())
+        vm.addMeal(
+            description = "Sample Day ${index + 1}",
+            calories = cals,
+            date = date
+        )
+    }
+
+    TrendTrackingScreen(
+        viewModel = vm
+    )
+}
