@@ -21,11 +21,13 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Calogoal() {
     val navController = rememberNavController()
+    val vm: CalorieViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 
     NavHost(
         navController = navController,
-        startDestination = "MealTracking"
+        startDestination = "TrendTrackingScreen"
     ) {
         composable("MealTracking") { MealTracker(navController) }
+        composable("TrendTrackingScreen"){TrendTrackingScreen(navController, viewModel = vm)}
     }
 }

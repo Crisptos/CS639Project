@@ -10,18 +10,22 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.navigation.NavController
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.components.LimitLine
 import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
 
 @Composable
 fun TrendTrackingScreen(
+    navController: NavController,
     modifier: Modifier = Modifier,
     viewModel: CalorieViewModel
 ) {
@@ -202,31 +206,4 @@ private fun isGoalMet(goalType: String, calories: Int, target: Int): Boolean {
         "Maintain"    -> abs(calories - target) <= 250   // within +/- 250 kcal
         else          -> calories <= target
     }
-}
-
-@Preview(showBackground = true, showSystemUi = false)
-@Composable
-fun TrendTrackingScreenPreview() {
-    val vm = CalorieViewModel()
-
-    vm.updateProfile(
-        name = "Preview User",
-        targetCalories = 2200,
-        goalType = "Lose Weight"
-    )
-    val today = LocalDate.now()
-    val caloriesPerDay = listOf(1800, 2100, 2500, 1900, 2300, 2200, 2600)
-
-    caloriesPerDay.forEachIndexed { index, cals ->
-        val date = today.minusDays((6 - index).toLong())
-        vm.addMeal(
-            description = "Sample Day ${index + 1}",
-            calories = cals,
-            date = date
-        )
-    }
-
-    TrendTrackingScreen(
-        viewModel = vm
-    )
 }
