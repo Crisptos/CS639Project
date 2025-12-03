@@ -32,7 +32,7 @@ fun MealSection(
             style = MaterialTheme.typography.titleMedium
         )
         items.forEach {
-            e ->
+                e ->
             Text(
                 text = e.label + " | " + e.calories,
                 style = MaterialTheme.typography.bodyLarge,
