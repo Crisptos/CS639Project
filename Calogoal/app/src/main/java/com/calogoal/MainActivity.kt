@@ -7,6 +7,8 @@ import androidx.compose.runtime.*
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.lifecycle.viewmodel.compose.viewModel
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -21,13 +23,26 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Calogoal() {
     val navController = rememberNavController()
-    val vm: CalorieViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 
     NavHost(
         navController = navController,
-        startDestination = "TrendTrackingScreen"
+        startDestination = Screen.MealTracking.route
     ) {
-        composable("MealTracking") { MealTracker(navController) }
-        composable("TrendTrackingScreen"){TrendTrackingScreen(navController, viewModel = vm)}
+
+        composable(Screen.MealTracking.route) {
+            MealTracker(navController)
+        }
+
+        composable(Screen.Profile.route) {
+            ProfilePage(navController)
+        }
+
+        composable(Screen.TrendTracking.route) {
+            val vm: CalorieViewModel = viewModel()
+            TrendTrackingScreen(
+                navController = navController,
+                viewModel = vm
+            )
+        }
     }
 }
