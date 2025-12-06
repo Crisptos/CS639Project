@@ -26,15 +26,14 @@ fun Calogoal() {
 
     NavHost(
         navController = navController,
-        startDestination = Screen.MealTracking.route
+        startDestination = Screen.Profile.route
     ) {
+        composable(Screen.Profile.route) {
+            ProfilePage(navController)
+        }
 
         composable(Screen.MealTracking.route) {
             MealTracker(navController)
-        }
-
-        composable(Screen.Profile.route) {
-            ProfilePage(navController)
         }
 
         composable(Screen.TrendTracking.route) {
