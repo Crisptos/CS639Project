@@ -1,7 +1,6 @@
 <resources>
     <string name="app_name">Calogoal</string>
 
-    <!-- Reusable Fields -->
     <string name="name">Name</string>
     <string name="age">Age</string>
     <string name="height">Height</string>
@@ -11,7 +10,6 @@
     <string name="gender">Gender</string>
     <string name="greeting">Welcome</string>
 
-    <!-- Profile Page -->
     <string name="profile_header">Profile</string>
     <string name="profile_field_basic_info">Basic Information</string>
     <string name="profile_field_stats">Stats</string>
@@ -32,5 +30,17 @@
         Welcome to Calogoal! Input your stats to get started with your BMR!
     </string>
 
+    <string name="add_food_title">Add New Food Item</string>
+    <string name="label_food_name">Food Name</string>
+    <string name="label_calories">Calories (kcal)</string>
+    <string name="button_add_food">Add Food to Meal</string>
+    <string name="unit_kcal">kcal</string>
+    <string name="meal_type_label">Meal Type: %s</string>
+    <string name="total_calories_summary">Total: %d %s</string>
+    <string name="food_item_display">%1$s | %2$d %3$s</string>
+
+    <string name="cd_profile_page">Profile Page</string>
+    <string name="cd_trend_tracking">Trend Tracking</string>
+    <string name="cd_exit_app">Exit App</string>
 
 </resources>
