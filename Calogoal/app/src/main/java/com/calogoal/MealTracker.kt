@@ -25,64 +25,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
-
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun MealTracker(navController: NavController) {
     val activity = LocalContext.current as? Activity
 
-    Scaffold(
-        bottomBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // 1) Profile Page
-                IconButton(onClick = {
-                    navController.navigate(Screen.Profile.route) {
-                        launchSingleTop = true
-                    }
-                }) {
-                    Icon(
-                        imageVector = Icons.Filled.Person,
-                        contentDescription = "Profile Page"
-                    )
-                }
-                // 2) Trend Tracking
-                IconButton(onClick = {
-                    navController.navigate(Screen.TrendTracking.route) {
-                        launchSingleTop = true
-                    }
-                }) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ShowChart,
-                        contentDescription = "Trend Tracking"
-                    )
-                }
-                // 3) Exit App
-                IconButton(onClick = { activity?.finish() }) {
-                    Icon(
-                        imageVector = Icons.Filled.Close,
-                        contentDescription = "Exit App"
-                    )
-                }
-            }
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
-        ) { }
-    }
-
-
-    // 1. STATE MANAGEMENT: Initialize a mutable list to hold tracked foods.
-    // In a real app, this would come from a ViewModel/Database.
+    // Initialize a mutable list to hold tracked foods.
     var trackedFoods by remember {
         mutableStateOf(
             listOf(
@@ -95,34 +44,91 @@ fun MealTracker(navController: NavController) {
         )
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    )
-    {
-        // FOOD INPUT SECTION
-        FoodInputForm(
-            onFoodAdded = { newFood ->
-                // Add the new food item to the list and trigger a recomposition
-                trackedFoods = trackedFoods + newFood
+    Scaffold(
+        bottomBar = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Profile Page
+                IconButton(onClick = {
+                    navController.navigate(Screen.Profile.route) {
+                        launchSingleTop = true
+                    }
+                }) {
+                    Icon(
+                        imageVector = Icons.Filled.Person,
+                        contentDescription = stringResource(R.string.cd_profile_page)
+                    )
+                }
+                // Trend Tracking
+                IconButton(onClick = {
+                    navController.navigate(Screen.TrendTracking.route) {
+                        launchSingleTop = true
+                    }
+                }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ShowChart,
+                        contentDescription = stringResource(R.string.cd_trend_tracking)
+                    )
+                }
+                // Exit App
+                IconButton(onClick = { activity?.finish() }) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = stringResource(R.string.cd_exit_app)
+                    )
+                }
             }
-        )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp)
+        ) {
+            // FOOD INPUT SECTION
+            FoodInputForm(
+                onFoodAdded = { newFood ->
+                    trackedFoods = trackedFoods + newFood
+                }
+            )
 
-        Spacer(modifier = Modifier.height(24.dp))
-        HorizontalDivider()
-        Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
 
-        //  MEAL TRACKING DISPLAY
-        // Pass the dynamically updated list to MealSection
-        MealSection(
-            title = TimeOfMeal.Breakfast, // Hardcoded for simplicity
-            items = trackedFoods
-        )
+            // MEAL TRACKING DISPLAY (Displaying all four sections)
+            MealSection(
+                title = TimeOfMeal.Breakfast,
+                items = trackedFoods.filter { it.mealType == TimeOfMeal.Breakfast }
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+
+            MealSection(
+                title = TimeOfMeal.Lunch,
+                items = trackedFoods.filter { it.mealType == TimeOfMeal.Lunch }
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+
+            MealSection(
+                title = TimeOfMeal.Dinner,
+                items = trackedFoods.filter { it.mealType == TimeOfMeal.Dinner }
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+
+            MealSection(
+                title = TimeOfMeal.Snack,
+                items = trackedFoods.filter { it.mealType == TimeOfMeal.Snack }
+            )
+        }
     }
 }
 
-// New Composable for the input form
 @Composable
 fun FoodInputForm(onFoodAdded: (TrackedFood) -> Unit) {
     // Local state for input fields
@@ -133,7 +139,7 @@ fun FoodInputForm(onFoodAdded: (TrackedFood) -> Unit) {
 
     Column {
         Text(
-            text = "Add New Food Item",
+            text = stringResource(R.string.add_food_title),
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = 8.dp)
         )
@@ -142,7 +148,7 @@ fun FoodInputForm(onFoodAdded: (TrackedFood) -> Unit) {
         OutlinedTextField(
             value = foodNameInput,
             onValueChange = { foodNameInput = it },
-            label = { Text("Food Name") },
+            label = { Text(stringResource(R.string.label_food_name)) },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -151,7 +157,7 @@ fun FoodInputForm(onFoodAdded: (TrackedFood) -> Unit) {
         OutlinedTextField(
             value = caloriesInput,
             onValueChange = { caloriesInput = it.filter { char -> char.isDigit() } },
-            label = { Text("Calories (kcal)") },
+            label = { Text(stringResource(R.string.label_calories)) },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Number
             ),
@@ -161,20 +167,19 @@ fun FoodInputForm(onFoodAdded: (TrackedFood) -> Unit) {
 
         Box(modifier = Modifier.fillMaxWidth()) {
             OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
-                Text(text = "Meal Type: ${selectedMeal.name}")
-                // Add an icon if you like
+                Text(text = stringResource(R.string.meal_type_label, selectedMeal.name))
             }
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
-                modifier = Modifier.fillMaxWidth(0.9f) // Limit width of menu
+                modifier = Modifier.fillMaxWidth(0.9f)
             ) {
                 TimeOfMeal.entries.forEach { meal ->
                     DropdownMenuItem(
                         text = { Text(meal.name) },
                         onClick = {
-                            selectedMeal = meal // Update the state with the new meal type
-                            expanded = false    // Close the menu
+                            selectedMeal = meal
+                            expanded = false
                         }
                     )
                 }
@@ -189,27 +194,25 @@ fun FoodInputForm(onFoodAdded: (TrackedFood) -> Unit) {
                 val calories = caloriesInput.toIntOrNull()
 
                 if (name.isNotEmpty() && calories != null && calories > 0) {
-                    // Create a new TrackedFood object
                     val newFood = TrackedFood(
                         label = name,
                         calories = calories,
-                        protein = 0, // Simplified: Assume 0 for new input
-                        carbs = 0,   // Simplified: Assume 0 for new input
+                        protein = 0,
+                        carbs = 0,
                         fat = 0,
                         mealType = selectedMeal
                     )
                     onFoodAdded(newFood)
 
-                    // Clear the input fields after successful addition
                     foodNameInput = ""
                     caloriesInput = ""
+                    selectedMeal = TimeOfMeal.Breakfast // Optional: reset selection
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-            // Disable button if inputs are empty/invalid
             enabled = foodNameInput.isNotEmpty() && caloriesInput.toIntOrNull() != null
         ) {
-            Text("Add Food to Meal")
+            Text(stringResource(R.string.button_add_food))
         }
     }
 }
@@ -219,21 +222,20 @@ fun MealSection(
     title: TimeOfMeal,
     items: List<TrackedFood>,
 ) {
-    // Only calculate total calories, removing totalProtein, totalFat, and totalCarbs calculations.
     val totalCalories = items.sumOf { it.calories }
+    val unitKcal = stringResource(R.string.unit_kcal)
 
     Column {
-        // 1. Display Meal Title
+        // Display Meal Title
         Text(
             text = title.name,
             style = MaterialTheme.typography.titleMedium
         )
 
-        // 2. List Individual Food Items with Calories
+        // List Individual Food Items with Calories
         items.forEach { e ->
             Text(
-                // Display label and calories for a clean list
-                text = "${e.label} | ${e.calories} kcal",
+                text = stringResource(R.string.food_item_display, e.label, e.calories, unitKcal),
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(start = 12.dp, top = 2.dp)
             )
@@ -241,10 +243,9 @@ fun MealSection(
 
         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-        // 3. Display Total Summary (Only Calories)
+        // Display Total Summary 
         Text(
-            // Show total Calories only
-            text = "Total: $totalCalories kcal",
+            text = stringResource(R.string.total_calories_summary, totalCalories, unitKcal),
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.padding(start = 12.dp, top = 2.dp)
         )
