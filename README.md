@@ -1,7 +1,7 @@
 # Calogoal
 ### About this app
 This is a project for the Mobile Application Development course (CS639) at PACE. Calogoal helps users reach their fitness and wellness goals by giving them a central hub to track their meals and caloric intake.
-### [Idea Proposal and Research](https://docs.google.com/document/d/1d66QySOIP4ZJdojzy5ZrcAySyJDUOEVEPDgrvcebG6o/edit?usp=sharing)
+### [Idea Proposal](https://docs.google.com/document/d/1d66QySOIP4ZJdojzy5ZrcAySyJDUOEVEPDgrvcebG6o/edit?usp=sharing)
 
 ## Design Prototypes
 - [Prototype Screenshots](Resources/Screenshots/Prototypes/)
