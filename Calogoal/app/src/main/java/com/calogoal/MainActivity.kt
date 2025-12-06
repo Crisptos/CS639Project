@@ -14,28 +14,39 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val prefs = getSharedPreferences("calogoal_prefs", MODE_PRIVATE)
+        val isNewUser = prefs.getBoolean("is_new_user", true)
+
         setContent {
-            Calogoal()
+            Calogoal(
+                startDestination = if (isNewUser) Screen.NewUser.route else Screen.TrendTracking.route
+            )
         }
     }
 }
 
 @Composable
-fun Calogoal() {
+fun Calogoal(startDestination: String) {
     val navController = rememberNavController()
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Profile.route
+        startDestination = startDestination
     ) {
+        // New User Screen
+        composable(Screen.NewUser.route) {
+            NewUser(navController)
+        }
+        // Profile Screen
         composable(Screen.Profile.route) {
             ProfilePage(navController)
         }
-
+        // Meal Tracking Screen
         composable(Screen.MealTracking.route) {
             MealTracker(navController)
         }
-
+        // Trend Tracking Screen
         composable(Screen.TrendTracking.route) {
             val vm: CalorieViewModel = viewModel()
             TrendTrackingScreen(
