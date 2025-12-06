@@ -4,9 +4,11 @@ import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import androidx.compose.material3.ListItemDefaults.contentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -58,21 +60,28 @@ fun NewUser(navController: NavController) {
                     modifier = Modifier.padding(horizontal = 8.dp)
                 )
             }
+
+            Spacer(modifier = Modifier.height(60.dp))
+
 // Getting Started Button
             Button(
                 onClick = {
                     val prefs = context.getSharedPreferences("calogoal_prefs", Context.MODE_PRIVATE)
                     prefs.edit().putBoolean("is_new_user", false).apply()
 
-                    navController.navigate(Screen.TrendTracking.route) {
+                    navController.navigate(Screen.Profile.route) {
                         popUpTo(Screen.NewUser.route) { inclusive = true }
                         launchSingleTop = true
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                shape = MaterialTheme.shapes.extraLarge
+                    .height(52.dp),
+                shape = MaterialTheme.shapes.extraLarge,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFFA500),
+                    contentColor = Color.White
+                )
             ) {
                 Text(
                     "Get Started",
