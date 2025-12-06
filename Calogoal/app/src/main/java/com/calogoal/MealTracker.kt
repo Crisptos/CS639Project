@@ -25,13 +25,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.res.stringResource // REQUIRED IMPORT
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun MealTracker(navController: NavController) {
     val activity = LocalContext.current as? Activity
 
-    // 1. STATE MANAGEMENT: Initialize a mutable list to hold tracked foods.
+    // Initialize a mutable list to hold tracked foods.
     var trackedFoods by remember {
         mutableStateOf(
             listOf(
@@ -53,7 +53,7 @@ fun MealTracker(navController: NavController) {
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 1) Profile Page
+                // Profile Page
                 IconButton(onClick = {
                     navController.navigate(Screen.Profile.route) {
                         launchSingleTop = true
@@ -61,10 +61,10 @@ fun MealTracker(navController: NavController) {
                 }) {
                     Icon(
                         imageVector = Icons.Filled.Person,
-                        contentDescription = stringResource(R.string.cd_profile_page) // USED STRING RESOURCE
+                        contentDescription = stringResource(R.string.cd_profile_page)
                     )
                 }
-                // 2) Trend Tracking
+                // Trend Tracking
                 IconButton(onClick = {
                     navController.navigate(Screen.TrendTracking.route) {
                         launchSingleTop = true
@@ -72,14 +72,14 @@ fun MealTracker(navController: NavController) {
                 }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ShowChart,
-                        contentDescription = stringResource(R.string.cd_trend_tracking) // USED STRING RESOURCE
+                        contentDescription = stringResource(R.string.cd_trend_tracking)
                     )
                 }
-                // 3) Exit App
+                // Exit App
                 IconButton(onClick = { activity?.finish() }) {
                     Icon(
                         imageVector = Icons.Filled.Close,
-                        contentDescription = stringResource(R.string.cd_exit_app) // USED STRING RESOURCE
+                        contentDescription = stringResource(R.string.cd_exit_app)
                     )
                 }
             }
@@ -139,7 +139,7 @@ fun FoodInputForm(onFoodAdded: (TrackedFood) -> Unit) {
 
     Column {
         Text(
-            text = stringResource(R.string.add_food_title), // USED STRING RESOURCE
+            text = stringResource(R.string.add_food_title),
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = 8.dp)
         )
@@ -148,7 +148,7 @@ fun FoodInputForm(onFoodAdded: (TrackedFood) -> Unit) {
         OutlinedTextField(
             value = foodNameInput,
             onValueChange = { foodNameInput = it },
-            label = { Text(stringResource(R.string.label_food_name)) }, // USED STRING RESOURCE
+            label = { Text(stringResource(R.string.label_food_name)) },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -157,7 +157,7 @@ fun FoodInputForm(onFoodAdded: (TrackedFood) -> Unit) {
         OutlinedTextField(
             value = caloriesInput,
             onValueChange = { caloriesInput = it.filter { char -> char.isDigit() } },
-            label = { Text(stringResource(R.string.label_calories)) }, // USED STRING RESOURCE
+            label = { Text(stringResource(R.string.label_calories)) },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Number
             ),
@@ -167,7 +167,6 @@ fun FoodInputForm(onFoodAdded: (TrackedFood) -> Unit) {
 
         Box(modifier = Modifier.fillMaxWidth()) {
             OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
-                // USED STRING RESOURCE with argument injection
                 Text(text = stringResource(R.string.meal_type_label, selectedMeal.name))
             }
             DropdownMenu(
@@ -213,7 +212,7 @@ fun FoodInputForm(onFoodAdded: (TrackedFood) -> Unit) {
             modifier = Modifier.fillMaxWidth(),
             enabled = foodNameInput.isNotEmpty() && caloriesInput.toIntOrNull() != null
         ) {
-            Text(stringResource(R.string.button_add_food)) // USED STRING RESOURCE
+            Text(stringResource(R.string.button_add_food))
         }
     }
 }
@@ -227,16 +226,15 @@ fun MealSection(
     val unitKcal = stringResource(R.string.unit_kcal)
 
     Column {
-        // 1. Display Meal Title (title.name is from the Enum, not a string resource)
+        // Display Meal Title
         Text(
             text = title.name,
             style = MaterialTheme.typography.titleMedium
         )
 
-        // 2. List Individual Food Items with Calories
+        // List Individual Food Items with Calories
         items.forEach { e ->
             Text(
-                // USED STRING RESOURCE (food_item_display) for complex formatting
                 text = stringResource(R.string.food_item_display, e.label, e.calories, unitKcal),
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(start = 12.dp, top = 2.dp)
@@ -245,9 +243,8 @@ fun MealSection(
 
         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-        // 3. Display Total Summary (Only Calories)
+        // Display Total Summary 
         Text(
-            // USED STRING RESOURCE (total_calories_summary) for formatting
             text = stringResource(R.string.total_calories_summary, totalCalories, unitKcal),
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.padding(start = 12.dp, top = 2.dp)
