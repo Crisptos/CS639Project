@@ -53,11 +53,14 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.compose.foundation)
     testImplementation(libs.junit)
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 }

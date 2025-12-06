@@ -2,17 +2,28 @@
 
 package com.calogoal
 
+import android.app.Activity
 import android.graphics.Color as AndroidColor
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.navigation.NavController
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.components.LimitLine
 import com.github.mikephil.charting.data.BarData
@@ -24,41 +35,89 @@ import kotlin.math.abs
 
 @Composable
 fun TrendTrackingScreen(
+    navController: NavController,
     modifier: Modifier = Modifier,
     viewModel: CalorieViewModel
 ) {
+    val activity = LocalContext.current as? Activity
+
     val profile = viewModel.profile
     val target = profile.targetCalories
     val goalType = profile.goalType
     val trend = viewModel.trend(days = 7)
     val formatter = DateTimeFormatter.ofPattern("dd MMM")
 
-    // If no data available, show a message
-    if (trend.isEmpty()) {
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "Calorie Trend Tracking",
-                style = MaterialTheme.typography.titleLarge
-            )
-            Text(
-                text = "No data available",
-                style = MaterialTheme.typography.bodyMedium
-            )
+    Scaffold(
+        bottomBar = {
+            // Navigation bar
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // 1) Profile Page
+                IconButton(onClick = {
+                    navController.navigate(Screen.Profile.route) {
+                        launchSingleTop = true
+                    }
+                }) {
+                    Icon(
+                        imageVector = Icons.Filled.Person,
+                        contentDescription = "Profile Page"
+                    )
+                }
+
+                // 2) Calendar icon -> Meal Tracking
+                IconButton(onClick = {
+                    navController.navigate(Screen.MealTracking.route) {
+                        launchSingleTop = true
+                    }
+                }) {
+                    Icon(
+                        imageVector = Icons.Filled.CalendarMonth,
+                        contentDescription = "Meal Tracking"
+                    )
+                }
+
+                // 3) Exit App
+                IconButton(onClick = { activity?.finish() }) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = "Exit App"
+                    )
+                }
+            }
         }
-            return
+    ) { paddingValues ->
+
+        // If no data available, show a message
+        if (trend.isEmpty()) {
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Calorie Trend Tracking",
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Text(
+                    text = "No data available",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+            return@Scaffold
         }
 
-    // Data available, show the chart and trend
-
+        // Data available, show the chart and trend summary
         val totalDays = trend.size
         val daysGoalMet = trend.count { (_, calories) ->
-        isGoalMet(goalType, calories, target)
-    }
+            isGoalMet(goalType, calories, target)
+        }
         val daysGoalNotMet = totalDays - daysGoalMet
         val startDate = trend.first().first.format(formatter)
         val endDate = trend.last().first.format(formatter)
@@ -66,9 +125,11 @@ fun TrendTrackingScreen(
         Column(
             modifier = modifier
                 .fillMaxSize()
+                .padding(paddingValues)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Header
             Text(
                 text = "Calorie Trend Tracking",
                 style = MaterialTheme.typography.titleLarge
@@ -85,10 +146,9 @@ fun TrendTrackingScreen(
             )
 
             // Goal Status
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Surface(
                     tonalElevation = 2.dp,
@@ -121,78 +181,76 @@ fun TrendTrackingScreen(
                     }
                 }
             }
-        }
 
-    // Chart of calories per day
+            // Chart of calories per day
+            AndroidView(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(280.dp),
+                factory = { context ->
+                    BarChart(context).apply {
+                        description.isEnabled = false
+                        axisRight.isEnabled = false
+                        legend.isEnabled = true
 
-        AndroidView(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(280.dp),
-            factory = { context ->
-                BarChart(context).apply {
-                    description.isEnabled = false
-                    axisRight.isEnabled = false
-                    legend.isEnabled = true
+                        axisLeft.axisMinimum = 0f
+                        axisLeft.textColor = AndroidColor.DKGRAY
 
-                    axisLeft.axisMinimum = 0f
-                    axisLeft.textColor = AndroidColor.DKGRAY
-
-                    xAxis.granularity = 1f
-                    xAxis.textColor = AndroidColor.DKGRAY
-                    xAxis.setDrawGridLines(false)
-                }
-            },
-            update = { chart ->
-                val entries = trend.mapIndexed { index, (_, calories) ->
-                    BarEntry(index.toFloat(), calories.toFloat())
-                }
-
-                val dataSet = BarDataSet(entries, "Daily Calories")
-
-                // Set colors based on calorie levels
-                // Green for calories <= target, Red for calories > target
-                val colors = trend.map { (_, calories) ->
-                    if (calories <= target) {
-                        AndroidColor.parseColor("#4CAF50") // Green
-                    } else {
-                        AndroidColor.RED // Red
+                        xAxis.granularity = 1f
+                        xAxis.textColor = AndroidColor.DKGRAY
+                        xAxis.setDrawGridLines(false)
                     }
-                }
-                dataSet.colors = colors
-                dataSet.valueTextColor = AndroidColor.DKGRAY
-                dataSet.highLightColor = AndroidColor.BLACK
+                },
+                update = { chart ->
+                    val entries = trend.mapIndexed { index, (_, calories) ->
+                        BarEntry(index.toFloat(), calories.toFloat())
+                    }
 
-                chart.data = BarData(dataSet).apply {
-                    barWidth = 0.6f
-                }
+                    val dataSet = BarDataSet(entries, "Daily Calories")
 
-                // Set target line
-                chart.axisLeft.removeAllLimitLines()
-                val targetLine = LimitLine(target.toFloat(), "Target ${target}kcal").apply {
-                    lineWidth = 2f
-                    lineColor = AndroidColor.BLUE
-                    textColor = AndroidColor.BLUE
-                    textSize = 10f
-                }
-                chart.axisLeft.addLimitLine(targetLine)
+                    // Set colors based on calorie levels
+                    val colors = trend.map { (_, calories) ->
+                        if (calories <= target) {
+                            AndroidColor.parseColor("#4CAF50") // Green
+                        } else {
+                            AndroidColor.RED // Red
+                        }
+                    }
+                    dataSet.colors = colors
+                    dataSet.valueTextColor = AndroidColor.DKGRAY
+                    dataSet.highLightColor = AndroidColor.BLACK
 
-                chart.animateY(800)
-                chart.invalidate()
+                    chart.data = BarData(dataSet).apply {
+                        barWidth = 0.6f
+                    }
+
+                    // Set target line
+                    chart.axisLeft.removeAllLimitLines()
+                    val targetLine = LimitLine(target.toFloat(), "Target ${target}kcal").apply {
+                        lineWidth = 2f
+                        lineColor = AndroidColor.BLUE
+                        textColor = AndroidColor.BLUE
+                        textSize = 10f
+                    }
+                    chart.axisLeft.addLimitLine(targetLine)
+
+                    chart.animateY(800)
+                    chart.invalidate()
+                }
+            )
+
+            Divider()
+
+            // Summary of calories per day
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                trend.forEach { (date, calories) ->
+                    val met = isGoalMet(goalType, calories, target)
+                    val status = if (met) "Goal met" else "Goal not met"
+                    Text("${date.format(formatter)} – $calories kcal ($status)")
+                }
             }
-        )
-
-        Divider()
-
-    // Summary of calories per day
-    Column(
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        trend.forEach {
-            (date, calories) ->
-            val met = isGoalMet(goalType, calories, target)
-            val status = if (met) "Goal met" else "Goal not met"
-            Text("${date.format(formatter)} – $calories kcal ($status)")
         }
     }
 }
@@ -204,31 +262,4 @@ private fun isGoalMet(goalType: String, calories: Int, target: Int): Boolean {
         "Maintain"    -> abs(calories - target) <= 250   // within +/- 250 kcal
         else          -> calories <= target
     }
-}
-
-@Preview(showBackground = true, showSystemUi = false)
-@Composable
-fun TrendTrackingScreenPreview() {
-    val vm = CalorieViewModel()
-
-    vm.updateProfile(
-        name = "Preview User",
-        targetCalories = 2200,
-        goalType = "Lose Weight"
-    )
-    val today = LocalDate.now()
-    val caloriesPerDay = listOf(1800, 2100, 2500, 1900, 2300, 2200, 2600)
-
-    caloriesPerDay.forEachIndexed { index, cals ->
-        val date = today.minusDays((6 - index).toLong())
-        vm.addMeal(
-            description = "Sample Day ${index + 1}",
-            calories = cals,
-            date = date
-        )
-    }
-
-    TrendTrackingScreen(
-        viewModel = vm
-    )
 }

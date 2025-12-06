@@ -3,7 +3,21 @@ package com.calogoal
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import android.app.Activity
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ShowChart
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.calogoal.enums.TimeOfMeal
@@ -145,6 +159,63 @@ fun FoodInputForm(onFoodAdded: (TrackedFood) -> Unit) {
             enabled = foodNameInput.isNotEmpty() && caloriesInput.toIntOrNull() != null
         ) {
             Text("Add Food to Meal")
+    val activity = LocalContext.current as? Activity
+
+    Scaffold(
+        bottomBar = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // 1) Profile Page
+                IconButton(onClick = {
+                    navController.navigate(Screen.Profile.route) {
+                        launchSingleTop = true
+                    }
+                }) {
+                    Icon(
+                        imageVector = Icons.Filled.Person,
+                        contentDescription = "Profile Page"
+                    )
+                }
+                // 2) Trend Tracking
+                IconButton(onClick = {
+                    navController.navigate(Screen.TrendTracking.route) {
+                        launchSingleTop = true
+                    }
+                }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ShowChart,
+                        contentDescription = "Trend Tracking"
+                    )
+                }
+                // 3) Exit App
+                IconButton(onClick = { activity?.finish() }) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = "Exit App"
+                    )
+                }
+            }
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp)
+        ) {
+            MealSection(title = TimeOfMeal.Breakfast, items = listOf(
+                    TrackedFood("Toast", 167, 5, 40, 2),
+                    TrackedFood("Eggs", 100, 8, 6, 0),
+                    TrackedFood("Orange", 55, 1, 0, 12),
+                    TrackedFood("Sausage", 212, 9, 18, 2),
+                    TrackedFood("Milk", 130, 8, 5, 14)
+                )
+            )
         }
     }
 }
