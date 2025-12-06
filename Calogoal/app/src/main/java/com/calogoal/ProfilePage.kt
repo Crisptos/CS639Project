@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.calogoal
 
 import androidx.compose.foundation.layout.*
@@ -301,7 +303,7 @@ fun ProfilePagePreview() {
     // Replace 'YourAppNameTheme' with the actual name of your app's theme function
     // (This is usually found in your project's Theme.kt file, e.g., CaloGoalTheme)
     // For simplicity, we'll assume a generic theme name here.
-    CalogoalTheme { // Replace CaloGoalTheme with your actual theme function name
+    CalogoalTheme {
         ProfilePage(navController = rememberNavController())
     }
 }
