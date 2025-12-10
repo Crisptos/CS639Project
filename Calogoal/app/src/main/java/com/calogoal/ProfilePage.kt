@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -45,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.calogoal.models.CalculatedCalories
+import com.calogoal.viewmodels.ProfilePageViewModel
 import kotlin.math.roundToInt
 
 /**
@@ -60,14 +62,11 @@ fun calculateBMR(weightKg: Double, heightCm: Double, ageYears: Int, isMale: Bool
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfilePage(navController: NavController) {
+fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
     val activity = LocalContext.current as? Activity
+    val uiState = viewModel.uiState.collectAsState().value
 
     // --- State Variables for User Input ---
-    var name by remember { mutableStateOf("") }
-    var ageInYears by remember { mutableStateOf("") }
-    var heightInCm by remember { mutableStateOf("") } // in cm
-    var weightInKg by remember { mutableStateOf("") } // in kg
     var isMale by remember { mutableStateOf(true) } // Simple gender toggle for BMR
 
     // --- State Variables for Goals List ---
@@ -75,14 +74,14 @@ fun ProfilePage(navController: NavController) {
     var newGoalText by remember { mutableStateOf("") }
 
     // --- Derived State for Calorie Recommendation ---
-    val calculatedCalories = remember(ageInYears, heightInCm, weightInKg, isMale) {
-        val ageVal = ageInYears.toIntOrNull() ?: 0
-        val heightVal = heightInCm.toDoubleOrNull() ?: 0.0
-        val weightVal = weightInKg.toDoubleOrNull() ?: 0.0
+    val calculatedCalories = remember(uiState.age, uiState.height, uiState.weight, isMale) {
+        val ageVal = uiState.age
+        val heightVal = uiState.height
+        val weightVal = uiState.weight
 
 
         if (ageVal > 0 && heightVal > 0.0 && weightVal > 0.0) {
-            val bmr = calculateBMR(weightVal, heightVal, ageVal, isMale)
+            val bmr = calculateBMR(weightVal.toDouble(), heightVal.toDouble(), ageVal, isMale)
             val sedentaryCalories = (bmr * 1.2).roundToInt()
             val oneToThreeCalories = (bmr * 1.375).roundToInt()
             val fourToFiveCalories = (bmr * 1.55).roundToInt()
@@ -114,7 +113,7 @@ fun ProfilePage(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.greeting) + " " + name) },
+                title = { Text(stringResource(R.string.greeting) + " " + uiState.name) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary,
@@ -184,8 +183,8 @@ fun ProfilePage(navController: NavController) {
                 Spacer(Modifier.height(8.dp))
 
                 OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
+                    value = uiState.name,
+                    onValueChange = { uiState.name = it },
                     label = { stringResource(R.string.name) },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -231,20 +230,20 @@ fun ProfilePage(navController: NavController) {
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     StatInputField(
-                        value = ageInYears,
-                        onValueChange = { ageInYears = it },
+                        value = uiState.age.toString(),
+                        onValueChange = { uiState.age = it.toInt() },
                         label = stringResource(R.string.age) + " (yrs)", // TODO change units in settings
                         modifier = Modifier.weight(1f)
                     )
                     StatInputField(
-                        value = heightInCm,
-                        onValueChange = { heightInCm = it },
+                        value = uiState.height.toString(),
+                        onValueChange = { uiState.height = it.toInt() },
                         label = stringResource(R.string.height) + " (cm)",
                         modifier = Modifier.weight(1f)
                     )
                     StatInputField(
-                        value = weightInKg,
-                        onValueChange = { weightInKg = it },
+                        value = uiState.weight.toString(),
+                        onValueChange = { uiState.weight = it.toInt() },
                         label = stringResource(R.string.weight) + "(kg)",
                         modifier = Modifier.weight(1f)
                     )
@@ -380,14 +379,6 @@ fun GoalListItem(goal: String, onDelete: () -> Unit) {
                 )
             }
         }
-    }
-}
-
-@Preview(showBackground = true, name = "Profile Page Preview")
-@Composable
-fun ProfilePagePreview() {
-    CalogoalTheme {
-        ProfilePage(navController = rememberNavController())
     }
 }
 
