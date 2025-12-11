@@ -272,24 +272,43 @@ fun TrendTrackingScreen(
                             text = selectedDate.format(monthFormatter),
                             style = MaterialTheme.typography.titleMedium
                         )
+
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+
+                            // ← previous day
                             Surface(
                                 shape = CircleShape,
-                                tonalElevation = 1.dp
+                                tonalElevation = 1.dp,
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .clickable {
+                                        if (selectedIndex > 0) {
+                                            selectedIndex--
+                                        }
+                                    }
                             ) {
                                 Box(
-                                    modifier = Modifier.size(30.dp),
+                                    modifier = Modifier.fillMaxSize(),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text("←")
                                 }
                             }
+
+                            // → next day
                             Surface(
                                 shape = CircleShape,
-                                tonalElevation = 1.dp
+                                tonalElevation = 1.dp,
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .clickable {
+                                        if (selectedIndex < trend.lastIndex) {
+                                            selectedIndex++
+                                        }
+                                    }
                             ) {
                                 Box(
-                                    modifier = Modifier.size(30.dp),
+                                    modifier = Modifier.fillMaxSize(),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text("→")
@@ -338,6 +357,7 @@ fun TrendTrackingScreen(
                     }
                 }
             }
+
 
             // Calories Card and bar chart
             Surface(
