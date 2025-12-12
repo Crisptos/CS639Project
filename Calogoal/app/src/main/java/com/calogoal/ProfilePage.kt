@@ -3,20 +3,23 @@
 package com.calogoal
 
 import android.app.Activity
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ShowChart
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -31,12 +34,12 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -48,6 +51,14 @@ import androidx.navigation.compose.rememberNavController
 import com.calogoal.models.CalculatedCalories
 import com.calogoal.viewmodels.ProfilePageViewModel
 import kotlin.math.roundToInt
+import androidx.compose.ui.graphics.Color
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.calogoal.ui.theme.CalogoalTheme
+import java.time.LocalDate
+import android.app.DatePickerDialog
+import com.calogoal.enums.Sex
+import java.time.format.DateTimeFormatter
+import java.util.Calendar
 
 /**
  * Calculates Basal Metabolic Rate (BMR) using the Mifflin-St Jeor equation.
@@ -65,13 +76,16 @@ fun calculateBMR(weightKg: Double, heightCm: Double, ageYears: Int, isMale: Bool
 fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
     val activity = LocalContext.current as? Activity
     val uiState = viewModel.uiState.collectAsState().value
+    val context = LocalContext.current
+
+    var sex: Sex = Sex.MALE
+    //var dateOfBirth by remember { mutableStateOf(savedProfile.dateOfBirth) }
+    val dobFormatter = remember { DateTimeFormatter.ofPattern("MM/dd/yyyy") }
+    val dobDisplayText = "12/12/1212"
 
     // --- State Variables for User Input ---
     var isMale by remember { mutableStateOf(true) } // Simple gender toggle for BMR
-
-    // --- State Variables for Goals List ---
-    val goals = remember { mutableStateListOf("Lose 5 kg", "Drink 2L water daily") }
-    var newGoalText by remember { mutableStateOf("") }
+    val fruits = listOf("apple", "banana", "orange")
 
     // --- Derived State for Calorie Recommendation ---
     val calculatedCalories = remember(uiState.age, uiState.height, uiState.weight, isMale) {
@@ -113,15 +127,20 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.greeting) + " " + uiState.name) },
+                title = {
+                    val greeting = stringResource(R.string.greeting)
+                    Text(
+                        text = if (uiState.name.isBlank()) greeting else greeting + uiState.name
+                    )
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    titleContentColor = MaterialTheme.colorScheme.secondary,
                 )
             )
         },
         bottomBar = {
-            // ----- Bottom navigation bar -----
+            // Bottom navigation bar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -129,14 +148,15 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 1) Calendar icon -> Meal Tracking
                 IconButton(onClick = {
                     navController.navigate(Screen.MealTracking.route)
                 }) {
-                    Icon(imageVector = Icons.Filled.CalendarMonth, contentDescription = "Meal Tracking")
+                    Icon(
+                        imageVector = Icons.Filled.CalendarMonth,
+                        contentDescription = "Meal Tracking"
+                    )
                 }
 
-                // 2) Chart icon -> Trend Tracking
                 IconButton(onClick = {
                     navController.navigate(Screen.TrendTracking.route)
                 }) {
@@ -146,7 +166,6 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
                     )
                 }
 
-                // 3) X icon -> Exit app
                 IconButton(onClick = { activity?.finish() }) {
                     Icon(
                         imageVector = Icons.Filled.Close,
@@ -159,110 +178,32 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .background(Color.White)
+                .padding(
+                    top = paddingValues.calculateTopPadding(),
+                    bottom = paddingValues.calculateBottomPadding(),
+                    start = 16.dp,
+                    end = 16.dp
+                ),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Header
+            // Avatar + Section Title
             item {
-                Text(
-                    text = stringResource(R.string.profile_header),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            // --- 1. Basic Information Inputs ---
-            item {
-                Text(
-                    text = stringResource(R.string.profile_field_basic_info),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(Modifier.height(8.dp))
-
-                OutlinedTextField(
-                    value = uiState.name,
-                    onValueChange = { newValue -> viewModel.updateName(newValue) },
-                    label = { stringResource(R.string.name) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(Modifier.height(8.dp))
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(stringResource(R.string.gender), modifier = Modifier.weight(0.3f))
-                    Row(
-                        modifier = Modifier.weight(0.7f),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        FilterChip(
-                            selected = isMale,
-                            onClick = { isMale = true },
-                            label = { Text(stringResource(R.string.male)) }
-                        )
-                        FilterChip(
-                            selected = !isMale,
-                            onClick = { isMale = false },
-                            label = { Text(stringResource(R.string.female)) }
-                        )
-                    }
-                }
-            }
-
-            // --- 2. Input Stats (Age, Height, Weight) ---
-            item {
-                Text(
-                    text = stringResource(R.string.profile_field_stats),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(Modifier.height(8.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    StatInputField(
-                        value = uiState.age.toString(),
-                        onValueChange = { newValue ->
-                            if (newValue.all { it.isDigit() } || newValue.isEmpty()) {
-                                viewModel.updateAge(newValue)
-                            }
-                        },
-                        label = stringResource(R.string.age) + " (yrs)", // TODO change units in settings
-                        modifier = Modifier.weight(1f)
-                    )
-                    StatInputField(
-                        value = uiState.height.toString(),
-                        onValueChange = { newValue ->
-                            if (newValue.all { it.isDigit() } || newValue.isEmpty()) {
-                                viewModel.updateHeight(newValue)
-                            }
-                        },
-                        label = stringResource(R.string.height) + " (cm)",
-                        modifier = Modifier.weight(1f)
-                    )
-                    StatInputField(
-                        value = uiState.weight.toString(),
-                        onValueChange = { newValue ->
-                            if (newValue.all { it.isDigit() } || newValue.isEmpty()) {
-                                viewModel.updateWeight(newValue)
-                            }
-                        },
-                        label = stringResource(R.string.weight) + "(kg)",
-                        modifier = Modifier.weight(1f)
+                    GenderAvatar(isMale = sex == Sex.MALE)
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = "Profile Data",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
 
-            // --- 3. Calorie Recommendation Output ---
+            // Profile Data Card
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -270,62 +211,232 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+
+                        // Name | Sex row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            OutlinedTextField(
+                                value = uiState.name,
+                                onValueChange = { newValue -> viewModel.updateName(newValue) },
+                                label = {
+                                    Text(
+                                        "Name",
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                },
+                                modifier = Modifier.weight(2f),
+                                singleLine = true
+                            )
+
+                            Column(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = "Sex",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    FilterChip(
+                                        selected = sex == Sex.MALE,
+                                        onClick = { sex = Sex.MALE },
+                                        label = { Text("M") }
+                                    )
+                                    FilterChip(
+                                        selected = sex == Sex.FEMALE,
+                                        onClick = { sex = Sex.FEMALE },
+                                        label = { Text("F") }
+                                    )
+                                }
+                            }
+                        }
+
+                        // Date of Birth | Height | Weight row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Date of Birth (MM/DD/YYYY, last 120 years)
+                            Box(
+                                modifier = Modifier.weight(1.3f)
+                            ) {
+                                OutlinedTextField(
+                                    value = dobDisplayText,
+                                    onValueChange = { /* read-only */ },
+                                    label = {
+                                        Text(
+                                            "Date of Birth",
+                                            style = MaterialTheme.typography.labelSmall
+                                        )
+                                    },
+                                    enabled = false,
+                                    readOnly = true,
+                                    singleLine = true,
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        disabledBorderColor = MaterialTheme.colorScheme.outline,
+                                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                    ),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
+                                // Clickable overlay to open DatePickerDialog
+                                Box(
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .clickable {
+                                            val now = LocalDate.now()
+
+                                            val cal = Calendar.getInstance()
+                                            val maxDateMillis = cal.timeInMillis
+                                            cal.add(Calendar.YEAR, -120)
+                                            val minDateMillis = cal.timeInMillis
+
+                                            val dialog = DatePickerDialog(
+                                                context,
+                                                { _, year, month, dayOfMonth ->
+                                                    var dateOfBirth = LocalDate.of(
+                                                        year,
+                                                        month + 1, // DatePickerDialog uses 0-based month
+                                                        dayOfMonth
+                                                    )
+                                                },
+                                                now.year,
+                                                now.monthValue - 1,
+                                                now.dayOfMonth
+                                            )
+
+                                            dialog.datePicker.maxDate = maxDateMillis
+                                            dialog.datePicker.minDate = minDateMillis
+                                            dialog.show()
+                                        }
+                                )
+                            }
+
+                            // Height (inches)
+                            StatInputField(
+                                value = uiState.height,
+                                onValueChange = { newValue -> viewModel.updateHeight(newValue) },
+                                label = "Height (in)",
+                                modifier = Modifier.weight(0.9f)
+                            )
+
+                            // Weight (lbs)
+                            StatInputField(
+                                value = uiState.weight,
+                                onValueChange = { newValue -> viewModel.updateWeight(newValue) },
+                                label = "Weight (lbs)",
+                                modifier = Modifier.weight(0.9f)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Goals Section
+            item {
+                Text(
+                    text = "Goals",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Intended weight target
+                        StatInputField(
+                            value = "PLACEHOLDER",
+                            onValueChange = { it },
+                            label = "Intended Weight Target (lbs)",
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        // Weekly Exercise Routine (enum-backed dropdown)
+                        StringDropdownField(
+                            label = "Weekly Exercise Routine",
+                            options = fruits,
+                            selectedOption = "PLACEHOLDER",
+                            onOptionSelected = { label ->
+                                label
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        // Display inferred goal
                         Text(
-                            text = stringResource(R.string.profile_label_calorie_rec),
+                            text = "Goal: PLACEHOLDER",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
+            // Target Calories Output
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Target calories per day",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            text = calculatedCalorieOutput ?: stringResource(R.string.profile_info_calculated_placeholder),
+                            text = "PLACEHOLDER",
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
                 }
             }
 
-            // --- 4. Journal Goals List ---
+            // Save Button
             item {
-                Text(
-                    "Journal Goals",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(Modifier.height(8.dp))
+                Button(
+                    onClick = {
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    //enabled = name.isNotBlank() && targetCaloriesPerDay != null
                 ) {
-                    OutlinedTextField(
-                        value = newGoalText,
-                        onValueChange = { newGoalText = it },
-                        label = { Text( stringResource(R.string.profile_field_goal) ) },
-                        modifier = Modifier.weight(1f)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Button(
-                        onClick = {
-                            if (newGoalText.isNotBlank()) {
-                                goals.add(newGoalText.trim())
-                                newGoalText = ""
-                            }
-                        },
-                        enabled = newGoalText.isNotBlank(),
-                        contentPadding = PaddingValues(12.dp)
-                    ) {
-                        Icon(Icons.Filled.Add, contentDescription = "Add Goal")
-                    }
+                    Text("Save Profile")
                 }
-            }
-
-            // List of Current Goals
-            itemsIndexed(goals) { index, goal ->
-                GoalListItem(
-                    goal = goal,
-                    onDelete = { goals.removeAt(index) }
-                )
             }
 
             item {
@@ -334,6 +445,8 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
         }
     }
 }
+
+// Reusable UI helpers (single definitions)
 
 @Composable
 fun StatInputField(
@@ -362,32 +475,50 @@ fun StatInputField(
 }
 
 @Composable
-fun GoalListItem(goal: String, onDelete: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
-    ) {
-        Row(
+fun StringDropdownField(
+    label: String,
+    options: List<String>,
+    selectedOption: String,
+    onOptionSelected: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val valueToShow = selectedOption.ifEmpty { "" }
+
+    Box(modifier = modifier) {
+        OutlinedTextField(
+            value = valueToShow,
+            onValueChange = { /* read-only */ },
+            readOnly = true,
+            label = { Text(label, style = MaterialTheme.typography.labelSmall) },
+            trailingIcon = {
+                Icon(
+                    imageVector = Icons.Filled.ArrowDropDown,
+                    contentDescription = "Select $label"
+                )
+            },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = goal,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f)
+                .clickable { expanded = true },
+            singleLine = true,
+            shape = RoundedCornerShape(8.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline
             )
-            IconButton(onClick = onDelete) {
-                Icon(
-                    Icons.Filled.Delete,
-                    contentDescription = "Delete Goal",
-                    tint = MaterialTheme.colorScheme.error
+        )
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    onClick = {
+                        onOptionSelected(option)
+                        expanded = false
+                    }
                 )
             }
         }
@@ -395,6 +526,37 @@ fun GoalListItem(goal: String, onDelete: () -> Unit) {
 }
 
 @Composable
-fun CalogoalTheme(content: @Composable () -> Unit) {
-    TODO("Not yet implemented")
+fun GenderAvatar(
+    isMale: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val bgColor = Color(0xFF3FB68E)  // Teal green
+    val contentColor = Color.Black   // Best contrast on light green
+    val emoji = if (isMale) "👨" else "👩"
+
+    Box(
+        modifier = modifier
+            .size(54.dp)
+            .clip(CircleShape)
+            .background(bgColor),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = emoji,
+            style = MaterialTheme.typography.headlineLarge,
+            color = contentColor
+        )
+    }
+}
+
+
+@Preview(showBackground = true, name = "Profile Page Preview")
+@Composable
+fun ProfilePagePreview() {
+    CalogoalTheme {
+        ProfilePage(
+            navController = rememberNavController(),
+            viewModel = hiltViewModel()
+        )
+    }
 }

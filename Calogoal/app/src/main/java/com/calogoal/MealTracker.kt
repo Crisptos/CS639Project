@@ -2,44 +2,53 @@ package com.calogoal
 
 import android.app.Activity
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ShowChart
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.calogoal.enums.TimeOfMeal
 import com.calogoal.models.TrackedFood
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.material.icons.automirrored.filled.ShowChart
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.res.stringResource
 
 @Composable
-fun MealTracker(navController: NavController) {
+fun MealTracker(
+    navController: NavController,
+    viewModel: CalorieViewModel
+) {
     val activity = LocalContext.current as? Activity
 
-    // Initialize a mutable list to hold tracked foods.
+    // Local list of tracked foods for this screen
     var trackedFoods by remember {
         mutableStateOf(
             listOf(
                 TrackedFood("Toast", 167, 5, 40, 2, TimeOfMeal.Breakfast),
-                TrackedFood("Eggs", 100, 8, 6, 0,TimeOfMeal.Breakfast),
-                TrackedFood("Orange", 55, 1, 0, 12,TimeOfMeal.Snack),
-                TrackedFood("Sausage", 212, 9, 18, 2,TimeOfMeal.Breakfast),
-                TrackedFood("Milk", 130, 8, 5, 14,TimeOfMeal.Breakfast)
+                TrackedFood("Eggs", 100, 8, 6, 0, TimeOfMeal.Breakfast),
+                TrackedFood("Orange", 55, 1, 0, 12, TimeOfMeal.Snack),
+                TrackedFood("Sausage", 212, 9, 18, 2, TimeOfMeal.Breakfast),
+                TrackedFood("Milk", 130, 8, 5, 14, TimeOfMeal.Breakfast)
             )
         )
     }
@@ -91,10 +100,16 @@ fun MealTracker(navController: NavController) {
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            // FOOD INPUT SECTION
+            // Food Input Form
             FoodInputForm(
                 onFoodAdded = { newFood ->
+                    // Update local UI list
                     trackedFoods = trackedFoods + newFood
+                    // Also record in shared ViewModel so Trend screen sees it
+                    viewModel.addMeal(
+                        description = newFood.label,
+                        calories = newFood.calories
+                    )
                 }
             )
 
@@ -102,7 +117,7 @@ fun MealTracker(navController: NavController) {
             HorizontalDivider()
             Spacer(modifier = Modifier.height(24.dp))
 
-            // MEAL TRACKING DISPLAY (Displaying all four sections)
+            // Meal Tracking Display (all four sections)
             MealSection(
                 title = TimeOfMeal.Breakfast,
                 items = trackedFoods.filter { it.mealType == TimeOfMeal.Breakfast }
@@ -131,7 +146,6 @@ fun MealTracker(navController: NavController) {
 
 @Composable
 fun FoodInputForm(onFoodAdded: (TrackedFood) -> Unit) {
-    // Local state for input fields
     var foodNameInput by remember { mutableStateOf("") }
     var caloriesInput by remember { mutableStateOf("") }
     var selectedMeal by remember { mutableStateOf(TimeOfMeal.Breakfast) }
@@ -158,15 +172,17 @@ fun FoodInputForm(onFoodAdded: (TrackedFood) -> Unit) {
             value = caloriesInput,
             onValueChange = { caloriesInput = it.filter { char -> char.isDigit() } },
             label = { Text(stringResource(R.string.label_calories)) },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number
-            ),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Meal type dropdown
         Box(modifier = Modifier.fillMaxWidth()) {
-            OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
+            OutlinedButton(
+                onClick = { expanded = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text(text = stringResource(R.string.meal_type_label, selectedMeal.name))
             }
             DropdownMenu(
@@ -206,7 +222,7 @@ fun FoodInputForm(onFoodAdded: (TrackedFood) -> Unit) {
 
                     foodNameInput = ""
                     caloriesInput = ""
-                    selectedMeal = TimeOfMeal.Breakfast // Optional: reset selection
+                    selectedMeal = TimeOfMeal.Breakfast
                 }
             },
             modifier = Modifier.fillMaxWidth(),
@@ -226,16 +242,19 @@ fun MealSection(
     val unitKcal = stringResource(R.string.unit_kcal)
 
     Column {
-        // Display Meal Title
         Text(
             text = title.name,
             style = MaterialTheme.typography.titleMedium
         )
 
-        // List Individual Food Items with Calories
         items.forEach { e ->
             Text(
-                text = stringResource(R.string.food_item_display, e.label, e.calories, unitKcal),
+                text = stringResource(
+                    R.string.food_item_display,
+                    e.label,
+                    e.calories,
+                    unitKcal
+                ),
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(start = 12.dp, top = 2.dp)
             )
@@ -243,12 +262,14 @@ fun MealSection(
 
         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-        // Display Total Summary 
         Text(
-            text = stringResource(R.string.total_calories_summary, totalCalories, unitKcal),
+            text = stringResource(
+                R.string.total_calories_summary,
+                totalCalories,
+                unitKcal
+            ),
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.padding(start = 12.dp, top = 2.dp)
         )
-
     }
 }
