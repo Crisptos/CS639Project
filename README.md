@@ -4,7 +4,7 @@
 ### About this app
 Calogoal helps users reach their fitness and wellness goals by giving them a central hub to track their meals and caloric intake.
 
-### [Our Learning Experience](Resources/)
+### [Our Learning Experience](Resources/Pages/EXPERIENCE.md)
 ### [Idea Proposal](https://docs.google.com/document/d/1d66QySOIP4ZJdojzy5ZrcAySyJDUOEVEPDgrvcebG6o/edit?usp=sharing)
 
 ## Meet the Team

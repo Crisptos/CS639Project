@@ -33,6 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,6 +58,8 @@ import java.time.LocalDate
 import java.time.Period
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
+import com.calogoal.models.CalculatedCalories
+import com.calogoal.viewmodels.ProfilePageViewModel
 import kotlin.math.roundToInt
 
 // Single definition of calculateBMR
@@ -121,6 +124,40 @@ fun ProfilePage(
                 intendedWeight < currentWeight - 2 -> GoalType.LOSE
                 else -> GoalType.MAINTAIN
             }
+fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
+    val activity = LocalContext.current as? Activity
+    val uiState = viewModel.uiState.collectAsState().value
+
+    // --- State Variables for User Input ---
+    var isMale by remember { mutableStateOf(true) } // Simple gender toggle for BMR
+
+    // --- State Variables for Goals List ---
+    val goals = remember { mutableStateListOf("Lose 5 kg", "Drink 2L water daily") }
+    var newGoalText by remember { mutableStateOf("") }
+
+    // --- Derived State for Calorie Recommendation ---
+    val calculatedCalories = remember(uiState.age, uiState.height, uiState.weight, isMale) {
+        val ageVal = uiState.age.toIntOrNull() ?: 0
+        val heightVal = uiState.height.toIntOrNull() ?: 0
+        val weightVal = uiState.weight.toIntOrNull() ?: 0
+
+
+        if (ageVal > 0 && heightVal > 0.0 && weightVal > 0.0) {
+            val bmr = calculateBMR(weightVal.toDouble(), heightVal.toDouble(), ageVal, isMale)
+            val sedentaryCalories = (bmr * 1.2).roundToInt()
+            val oneToThreeCalories = (bmr * 1.375).roundToInt()
+            val fourToFiveCalories = (bmr * 1.55).roundToInt()
+            val sixToSevenIntenseCalories = (bmr * 1.725).roundToInt()
+
+            CalculatedCalories(
+                bmr = bmr.roundToInt(),
+                sedentary = sedentaryCalories,
+                oneToThree = oneToThreeCalories,
+                fourToFive = fourToFiveCalories,
+                intenseSixToSeven = sixToSevenIntenseCalories
+            )
+        } else {
+            null
         }
 
         if (ageYears > 0 && heightInchesVal > 0.0 && currentWeight > 0.0) {
@@ -147,6 +184,7 @@ fun ProfilePage(
                         text = if (name.isBlank()) greeting else "$greeting $name"
                     )
                 },
+                title = { Text(stringResource(R.string.greeting) + " " + uiState.name) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.secondary,
                     titleContentColor = MaterialTheme.colorScheme.secondary,
@@ -250,6 +288,12 @@ fun ProfilePage(
                                 modifier = Modifier.weight(2f),
                                 singleLine = true
                             )
+                OutlinedTextField(
+                    value = uiState.name,
+                    onValueChange = { newValue -> viewModel.updateName(newValue) },
+                    label = { stringResource(R.string.name) },
+                    modifier = Modifier.fillMaxWidth()
+                )
 
                             Column(
                                 modifier = Modifier.weight(1f)
@@ -374,6 +418,37 @@ fun ProfilePage(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    StatInputField(
+                        value = uiState.age.toString(),
+                        onValueChange = { newValue ->
+                            if (newValue.all { it.isDigit() } || newValue.isEmpty()) {
+                                viewModel.updateAge(newValue)
+                            }
+                        },
+                        label = stringResource(R.string.age) + " (yrs)", // TODO change units in settings
+                        modifier = Modifier.weight(1f)
+                    )
+                    StatInputField(
+                        value = uiState.height.toString(),
+                        onValueChange = { newValue ->
+                            if (newValue.all { it.isDigit() } || newValue.isEmpty()) {
+                                viewModel.updateHeight(newValue)
+                            }
+                        },
+                        label = stringResource(R.string.height) + " (cm)",
+                        modifier = Modifier.weight(1f)
+                    )
+                    StatInputField(
+                        value = uiState.weight.toString(),
+                        onValueChange = { newValue ->
+                            if (newValue.all { it.isDigit() } || newValue.isEmpty()) {
+                                viewModel.updateWeight(newValue)
+                            }
+                        },
+                        label = stringResource(R.string.weight) + "(kg)",
+                        modifier = Modifier.weight(1f)
                     )
                 ) {
                     Column(
