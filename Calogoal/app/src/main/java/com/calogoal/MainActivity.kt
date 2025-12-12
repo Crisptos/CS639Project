@@ -4,23 +4,28 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.*
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.calogoal.services.FirestoreServiceImpl
+import com.calogoal.viewmodels.LoginViewModel
+import com.calogoal.viewmodels.ProfilePageViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        val prefs = getSharedPreferences("calogoal_prefs", MODE_PRIVATE)
-        val isNewUser = prefs.getBoolean("is_new_user", true)
-
         setContent {
+            val user =
+
             Calogoal(
-                startDestination = if (isNewUser) Screen.NewUser.route else Screen.TrendTracking.route
+                startDestination = Screen.Login.route
             )
         }
     }
@@ -40,7 +45,11 @@ fun Calogoal(startDestination: String) {
         }
         // Profile Screen
         composable(Screen.Profile.route) {
-            ProfilePage(navController)
+            val vm: ProfilePageViewModel = hiltViewModel()
+            ProfilePage(
+                navController = navController,
+                viewModel = vm
+            )
         }
         // Meal Tracking Screen
         composable(Screen.MealTracking.route) {
@@ -50,6 +59,13 @@ fun Calogoal(startDestination: String) {
         composable(Screen.TrendTracking.route) {
             val vm: CalorieViewModel = viewModel()
             TrendTrackingScreen(
+                navController = navController,
+                viewModel = vm
+            )
+        }
+        composable(Screen.Login.route) {
+            val vm: LoginViewModel = viewModel()
+            LoginScreen(
                 navController = navController,
                 viewModel = vm
             )
