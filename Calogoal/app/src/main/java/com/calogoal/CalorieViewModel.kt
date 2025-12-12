@@ -4,16 +4,24 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.calogoal.enums.ExerciseRoutine
+import com.calogoal.enums.Sex
 import com.calogoal.models.MealTracker
 import java.time.LocalDate
 
+// All profile data we want to persist
 data class Profile(
     val name: String = "",
-    val targetCalories: Int = 2000,
-    val goalType: String = "Lose Weight"
+    val sex: Sex = Sex.MALE,
+    val dateOfBirth: LocalDate? = null,
+    val heightInInches: String = "",
+    val weightInLbs: String = "",
+    val targetWeightInLbs: String = "",
+    val exerciseRoutine: ExerciseRoutine = ExerciseRoutine.LITTLE_OR_NONE,
+    val targetCalories: Int = 0,
+    val goalType: String = "Maintain"
 )
 
-// ViewModel
 class CalorieViewModel : ViewModel() {
 
     var profile by mutableStateOf(Profile())
@@ -26,17 +34,30 @@ class CalorieViewModel : ViewModel() {
 
     fun updateProfile(
         name: String,
+        sex: Sex,
+        dateOfBirth: LocalDate?,
+        heightInInches: String,
+        weightInLbs: String,
+        targetWeightInLbs: String,
+        exerciseRoutine: ExerciseRoutine,
         targetCalories: Int,
         goalType: String
     ) {
-        profile = profile.copy(
+        profile = Profile(
             name = name,
+            sex = sex,
+            dateOfBirth = dateOfBirth,
+            heightInInches = heightInInches,
+            weightInLbs = weightInLbs,
+            targetWeightInLbs = targetWeightInLbs,
+            exerciseRoutine = exerciseRoutine,
             targetCalories = targetCalories,
             goalType = goalType
         )
     }
 
-    // MealTracker
+    // ----- Meal tracking -----
+
     fun addMeal(
         description: String,
         calories: Int,
@@ -50,7 +71,6 @@ class CalorieViewModel : ViewModel() {
             description = description,
             calories = calories
         )
-
         meals = meals + newMeal
     }
 
@@ -61,7 +81,6 @@ class CalorieViewModel : ViewModel() {
     fun dailyTotal(date: LocalDate): Int {
         return meals.filter { it.date == date }.sumOf { it.calories }
     }
-
 
     fun trend(days: Long = 7): List<Pair<LocalDate, Int>> {
         val today = LocalDate.now()

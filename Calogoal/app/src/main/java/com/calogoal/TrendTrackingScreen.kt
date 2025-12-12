@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
+import com.calogoal.enums.GoalType
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.components.LimitLine
 import com.github.mikephil.charting.components.XAxis
@@ -39,6 +40,7 @@ import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.formatter.ValueFormatter
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
 
@@ -52,6 +54,38 @@ private fun greetingMessage(): String {
     }
 }
 
+/**
+ * Returns a 7–day trend:
+ *  - 6 previous days are hard–coded sample values
+ *  - Today's calories come from the ViewModel's meals
+ */
+private fun getSevenDayTrend(viewModel: CalorieViewModel): List<Pair<LocalDate, Int>> {
+    val today = LocalDate.now()
+
+    // Hard-coded values for the previous 6 days (relative to today)
+    // You can tweak these numbers as you like.
+    val hardcodedMap = mapOf(
+        today.minusDays(6) to 1850,
+        today.minusDays(5) to 2000,
+        today.minusDays(4) to 1725,
+        today.minusDays(3) to 2100,
+        today.minusDays(2) to 1950,
+        today.minusDays(1) to 2300
+    )
+
+    // Build the list in chronological order: 6 days ago ... yesterday
+    val previousDays = (6L downTo 1L).map { offset ->
+        val date = today.minusDays(offset)
+        date to (hardcodedMap[date] ?: 0)
+    }
+
+    // Today's real total from MealTracker / ViewModel
+    val todayTotal = viewModel.dailyTotal(today)
+    val todayEntry = today to todayTotal
+
+    return previousDays + todayEntry
+}
+
 @Composable
 fun TrendTrackingScreen(
     navController: NavController,
@@ -62,8 +96,29 @@ fun TrendTrackingScreen(
 
     val profile = viewModel.profile
     val target = profile.targetCalories
-    val goalType = profile.goalType
-    val trend = viewModel.trend(days = 7)
+
+    val goalType: GoalType = when (profile.goalType) {
+        "Gain Weight" -> GoalType.GAIN
+        "Lose Weight" -> GoalType.LOSE
+        "Maintain" -> GoalType.MAINTAIN
+        else -> GoalType.MAINTAIN
+    }
+
+    // Initials for avatar
+    val initials = remember(profile.name) {
+        profile.name
+            .trim()
+            .split(Regex("\\s+"))
+            .filter { it.isNotEmpty() }
+            .take(2)
+            .joinToString("") { it[0].uppercase() }
+            .ifEmpty { "S" }
+    }
+
+    // --- 7-day trend: 6 days hard-coded + today from ViewModel ---
+    val trend = remember(viewModel.meals, profile.targetCalories) {
+        getSevenDayTrend(viewModel)
+    }
 
     val dayFormatter = DateTimeFormatter.ofPattern("dd")
     val monthFormatter = DateTimeFormatter.ofPattern("LLLL yyyy")
@@ -127,22 +182,23 @@ fun TrendTrackingScreen(
             return@Scaffold
         }
 
-        val totalDays = trend.size
+        // ---- Weekly summary (7 days total) ----
+        val totalDays = trend.size  // should be 7
         val daysGoalMet = trend.count { (_, calories) ->
             isGoalMet(goalType, calories, target)
         }
         val daysGoalNotMet = totalDays - daysGoalMet
 
-        // Selected day (default: last day)
+        // Selected day (default: last day, i.e., today)
         var selectedIndex by remember { mutableStateOf(trend.lastIndex) }
         val selectedEntry = trend.getOrNull(selectedIndex) ?: trend.last()
         val selectedDate = selectedEntry.first
         val todayCalories = selectedEntry.second
 
-        // Weekly progress background color logic
+        // Weekly progress background color
         val weeklyBgColor = when {
-            daysGoalMet > 5 -> Color(0xFFDDF9B5) // green
-            daysGoalMet in 4..5 -> Color(0xFFFFF3CD) // yellow
+            daysGoalMet >= 5 -> Color(0xFFDDF9B5) // green
+            daysGoalMet in 3..4 -> Color(0xFFFFF3CD) // yellow
             else -> Color(0xFFFFE5E5) // red
         }
 
@@ -154,14 +210,13 @@ fun TrendTrackingScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // Top header
+            // Top header (avatar + greeting)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    // avatar placeholder
                     Box(
                         modifier = Modifier
                             .size(40.dp)
@@ -170,7 +225,7 @@ fun TrendTrackingScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "S",
+                            text = initials,
                             color = Color.White,
                             style = MaterialTheme.typography.titleMedium
                         )
@@ -187,9 +242,9 @@ fun TrendTrackingScreen(
                 }
             }
 
-            // Weekly Progress
+            // Weekly Progress card
             Surface(
-                color = weeklyBgColor, // dynamic background
+                color = weeklyBgColor,
                 shape = RoundedCornerShape(24.dp),
                 tonalElevation = 0.dp,
                 modifier = Modifier.fillMaxWidth()
@@ -215,7 +270,6 @@ fun TrendTrackingScreen(
                         )
                     }
 
-                    // Ring with "X days"
                     Box(
                         modifier = Modifier.size(90.dp),
                         contentAlignment = Alignment.Center
@@ -252,7 +306,7 @@ fun TrendTrackingScreen(
                 }
             }
 
-            // Month and Week Strip
+            // Month and Week strip
             Surface(
                 shape = RoundedCornerShape(24.dp),
                 tonalElevation = 2.dp,
@@ -263,6 +317,7 @@ fun TrendTrackingScreen(
                         .padding(horizontal = 20.dp, vertical = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    // Month + prev / next day buttons
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -317,6 +372,7 @@ fun TrendTrackingScreen(
                         }
                     }
 
+                    // Strip of 7 days (Mon/Tue/... + day of month)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -358,7 +414,6 @@ fun TrendTrackingScreen(
                 }
             }
 
-
             // Calories Card and bar chart
             Surface(
                 shape = RoundedCornerShape(24.dp),
@@ -372,6 +427,7 @@ fun TrendTrackingScreen(
                         .padding(horizontal = 20.dp, vertical = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    // Header: today's calories + target
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -402,13 +458,14 @@ fun TrendTrackingScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = "$target Kcal",
+                                text = if (target > 0) "$target Kcal" else "Not set",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
                     }
 
+                    // MPAndroidChart BarChart
                     AndroidView(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -432,7 +489,6 @@ fun TrendTrackingScreen(
                             }
                         },
                         update = { chart ->
-                            // y = percent of target
                             val entries = trend.mapIndexed { index, (_, calories) ->
                                 val percent = if (target > 0) {
                                     (calories.toFloat() / target.toFloat()) * 100f
@@ -443,7 +499,7 @@ fun TrendTrackingScreen(
                             val dataSet = BarDataSet(entries, "Percent").apply {
                                 val barColors = entries.mapIndexed { index, _ ->
                                     if (index == selectedIndex) {
-                                        AndroidColor.parseColor("#7DD321") // bright green
+                                        AndroidColor.parseColor("#7DD321") // selected green
                                     } else {
                                         AndroidColor.parseColor("#D7F2B8") // pale green
                                     }
@@ -460,13 +516,11 @@ fun TrendTrackingScreen(
 
                             chart.data = barData
 
-                            // X-axis labels: Mon..Sun style
                             val labels = trend.map { (date, _) ->
                                 date.dayOfWeek.name.substring(0, 3)
                             }
                             chart.xAxis.valueFormatter = IndexAxisValueFormatter(labels)
 
-                            // 100% target line
                             chart.axisLeft.removeAllLimitLines()
                             val targetLine =
                                 LimitLine(100f, "100%").apply {
@@ -477,7 +531,6 @@ fun TrendTrackingScreen(
                                 }
                             chart.axisLeft.addLimitLine(targetLine)
 
-                            // Highlight selected bar
                             chart.highlightValue(selectedIndex.toFloat(), 0)
 
                             chart.setFitBars(true)
@@ -488,7 +541,7 @@ fun TrendTrackingScreen(
 
                     HorizontalDivider()
 
-                    // quick summary row
+                    // Summary row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -509,18 +562,25 @@ fun TrendTrackingScreen(
 }
 
 // Formatter to show "110%" style labels above bars
-private class PercentValueFormatter : ValueFormatter() {
+class PercentValueFormatter : ValueFormatter() {
     override fun getBarLabel(barEntry: BarEntry?): String {
         if (barEntry == null) return ""
         return "${barEntry.y.toInt()}%"
     }
 }
 
-private fun isGoalMet(goalType: String, calories: Int, target: Int): Boolean {
+/**
+ * Goal evaluation uses GoalType enum:
+ * - GAIN: calories >= target
+ * - LOSE: calories <= target
+ * - MAINTAIN: within ±250 kcal
+ */
+private fun isGoalMet(goalType: GoalType, calories: Int, target: Int): Boolean {
+    if (target <= 0) return false
+
     return when (goalType) {
-        "Gain Weight" -> calories >= target
-        "Lose Weight" -> calories <= target
-        "Maintain" -> abs(calories - target) <= 250   // within +/- 250 kcal
-        else -> calories <= target
+        GoalType.GAIN -> calories >= target
+        GoalType.LOSE -> calories <= target
+        GoalType.MAINTAIN -> abs(calories - target) <= 250
     }
 }
