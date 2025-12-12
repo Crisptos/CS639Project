@@ -1,58 +1,62 @@
 package com.calogoal
+
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.*
-import androidx.navigation.compose.rememberNavController
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.lifecycle.viewmodel.compose.viewModel
-
+import androidx.navigation.compose.rememberNavController
+import com.calogoal.ui.theme.CalogoalTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-
-        val prefs = getSharedPreferences("calogoal_prefs", MODE_PRIVATE)
-        val isNewUser = prefs.getBoolean("is_new_user", true)
-
         setContent {
-            Calogoal(
-                startDestination = if (isNewUser) Screen.NewUser.route else Screen.TrendTracking.route
-            )
+            CalogoalApp()
         }
     }
 }
 
 @Composable
-fun Calogoal(startDestination: String) {
-    val navController = rememberNavController()
+fun CalogoalApp() {
+    CalogoalTheme {
+        val navController: NavHostController = rememberNavController()
+        // One shared ViewModel for the whole app
+        val viewModel: CalorieViewModel = viewModel()
 
-    NavHost(
-        navController = navController,
-        startDestination = startDestination
-    ) {
-        // New User Screen
-        composable(Screen.NewUser.route) {
-            NewUser(navController)
-        }
-        // Profile Screen
-        composable(Screen.Profile.route) {
-            ProfilePage(navController)
-        }
-        // Meal Tracking Screen
-        composable(Screen.MealTracking.route) {
-            MealTracker(navController)
-        }
-        // Trend Tracking Screen
-        composable(Screen.TrendTracking.route) {
-            val vm: CalorieViewModel = viewModel()
-            TrendTrackingScreen(
+        Scaffold { innerPadding ->
+            NavHost(
                 navController = navController,
-                viewModel = vm
-            )
+                startDestination = Screen.Profile.route,
+                modifier = Modifier.padding(innerPadding)
+            ) {
+                composable(Screen.Profile.route) {
+                    ProfilePage(
+                        navController = navController,
+                        viewModel = viewModel
+                    )
+                }
+
+                composable(Screen.MealTracking.route) {
+                    MealTracker(
+                        navController = navController,
+                        viewModel = viewModel
+                    )
+                }
+
+                composable(Screen.TrendTracking.route) {
+                    TrendTrackingScreen(
+                        navController = navController,
+                        viewModel = viewModel
+                    )
+                }
+            }
         }
     }
 }
