@@ -1,6 +1,7 @@
 package com.calogoal.services
 
 import com.calogoal.interfaces.FirestoreService
+import com.calogoal.models.dtos.ProfileDTO
 import com.calogoal.viewmodels.ProfileUiState
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -33,9 +34,9 @@ class FirestoreServiceImpl @Inject constructor(
         return snapshot.getString("name") ?: "Unknown User"
     }
 
-    override suspend fun getProfile(): ProfileUiState {
+    override suspend fun getProfile(): ProfileDTO {
         val snapshot = db.collection("users").document(userId).get().await()
-        return snapshot.toObject<ProfileUiState>()?: ProfileUiState()
+        return snapshot.toObject<ProfileDTO>()?: ProfileDTO()
     }
 
 }

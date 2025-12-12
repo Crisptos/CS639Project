@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.calogoal.interfaces.FirestoreService
 import com.calogoal.models.accounts.User
+import com.calogoal.models.dtos.ProfileDTO
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,10 +13,10 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class ProfileUiState(
-    var name: String = "",
-    var age: Int = 0,
-    var weight: Int = 0,
-    var height: Int = 0
+    val name: String = "",
+    val age: String = "",
+    val weight: String = "",
+    val height: String = ""
 )
 
 @HiltViewModel
@@ -27,7 +28,32 @@ class ProfilePageViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            _uiState.value = firestoreService.getProfile()
+            val data: ProfileDTO = firestoreService.getProfile()
+            val ageValue: String = data.age.toString()
+            val weightValue: String = data.weight.toString()
+            val heightValue: String = data.height.toString()
+            _uiState.value = ProfileUiState(
+                name = data.name,
+                age = ageValue,
+                weight = weightValue,
+                height = heightValue
+            )
         }
+    }
+
+    fun updateName(newName: String) {
+        _uiState.value = _uiState.value.copy(name = newName)
+    }
+
+    fun updateAge(newAge: String) {
+        _uiState.value = _uiState.value.copy(age = newAge)
+    }
+
+    fun updateHeight(newHeight: String) {
+        _uiState.value = _uiState.value.copy(height = newHeight)
+    }
+
+    fun updateWeight(newWeight: String) {
+        _uiState.value = _uiState.value.copy(weight = newWeight)
     }
 }

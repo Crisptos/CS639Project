@@ -75,9 +75,9 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
 
     // --- Derived State for Calorie Recommendation ---
     val calculatedCalories = remember(uiState.age, uiState.height, uiState.weight, isMale) {
-        val ageVal = uiState.age
-        val heightVal = uiState.height
-        val weightVal = uiState.weight
+        val ageVal = uiState.age.toIntOrNull() ?: 0
+        val heightVal = uiState.height.toIntOrNull() ?: 0
+        val weightVal = uiState.weight.toIntOrNull() ?: 0
 
 
         if (ageVal > 0 && heightVal > 0.0 && weightVal > 0.0) {
@@ -184,7 +184,7 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
 
                 OutlinedTextField(
                     value = uiState.name,
-                    onValueChange = { uiState.name = it },
+                    onValueChange = { newValue -> viewModel.updateName(newValue) },
                     label = { stringResource(R.string.name) },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -231,19 +231,31 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
                 ) {
                     StatInputField(
                         value = uiState.age.toString(),
-                        onValueChange = { uiState.age = it.toInt() },
+                        onValueChange = { newValue ->
+                            if (newValue.all { it.isDigit() } || newValue.isEmpty()) {
+                                viewModel.updateAge(newValue)
+                            }
+                        },
                         label = stringResource(R.string.age) + " (yrs)", // TODO change units in settings
                         modifier = Modifier.weight(1f)
                     )
                     StatInputField(
                         value = uiState.height.toString(),
-                        onValueChange = { uiState.height = it.toInt() },
+                        onValueChange = { newValue ->
+                            if (newValue.all { it.isDigit() } || newValue.isEmpty()) {
+                                viewModel.updateHeight(newValue)
+                            }
+                        },
                         label = stringResource(R.string.height) + " (cm)",
                         modifier = Modifier.weight(1f)
                     )
                     StatInputField(
                         value = uiState.weight.toString(),
-                        onValueChange = { uiState.weight = it.toInt() },
+                        onValueChange = { newValue ->
+                            if (newValue.all { it.isDigit() } || newValue.isEmpty()) {
+                                viewModel.updateWeight(newValue)
+                            }
+                        },
                         label = stringResource(R.string.weight) + "(kg)",
                         modifier = Modifier.weight(1f)
                     )
