@@ -33,7 +33,6 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val user =
-
             Calogoal(
                 startDestination = Screen.Login.route
             )
@@ -42,70 +41,51 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun CalogoalApp() {
+fun Calogoal(startDestination: String) {
     CalogoalTheme {
         val navController: NavHostController = rememberNavController()
-        // One shared ViewModel for the whole app
-        val viewModel: CalorieViewModel = viewModel()
 
         Scaffold { innerPadding ->
             NavHost(
-    NavHost(
-        navController = navController,
-        startDestination = startDestination
-    ) {
-        // New User Screen
-        composable(Screen.NewUser.route) {
-            NewUser(navController)
-        }
-        // Profile Screen
-        composable(Screen.Profile.route) {
-            val vm: ProfilePageViewModel = hiltViewModel()
-            ProfilePage(
                 navController = navController,
-                viewModel = vm
-            )
-        }
-        // Meal Tracking Screen
-        composable(Screen.MealTracking.route) {
-            MealTracker(navController)
-        }
-        // Trend Tracking Screen
-        composable(Screen.TrendTracking.route) {
-            val vm: CalorieViewModel = viewModel()
-            TrendTrackingScreen(
-                navController = navController,
-                startDestination = Screen.Profile.route,
+                startDestination = startDestination,
                 modifier = Modifier.padding(innerPadding)
             ) {
+                // New User Screen
+                composable(Screen.NewUser.route) {
+                    NewUser(navController)
+                }
+                // Profile Screen
                 composable(Screen.Profile.route) {
+                    val vm: ProfilePageViewModel = hiltViewModel()
                     ProfilePage(
                         navController = navController,
-                        viewModel = viewModel
+                        viewModel = vm
                     )
                 }
 
+                // Meal Tracking Screen
                 composable(Screen.MealTracking.route) {
-                    MealTracker(
-                        navController = navController,
-                        viewModel = viewModel
-                    )
+                    val vm: CalorieViewModel = hiltViewModel()
+                    MealTracker(navController, vm)
                 }
-
+                // Trend Tracking Screen
                 composable(Screen.TrendTracking.route) {
+                    val vm: CalorieViewModel = viewModel()
                     TrendTrackingScreen(
                         navController = navController,
-                        viewModel = viewModel
+                        viewModel = vm
                     )
                 }
+                composable(Screen.Login.route) {
+                    val vm: LoginViewModel = viewModel()
+                    LoginScreen(
+                        navController = navController,
+                        viewModel = vm
+                    )
+                }
+
             }
         }
-        composable(Screen.Login.route) {
-            val vm: LoginViewModel = viewModel()
-            LoginScreen(
-                navController = navController,
-                viewModel = vm
-            )
         }
-    }
 }

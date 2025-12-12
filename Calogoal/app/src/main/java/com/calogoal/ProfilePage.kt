@@ -3,7 +3,6 @@
 package com.calogoal
 
 import android.app.Activity
-import android.app.DatePickerDialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -41,7 +40,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -50,19 +48,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.calogoal.enums.ExerciseRoutine
-import com.calogoal.enums.GoalType
-import com.calogoal.enums.Sex
-import com.calogoal.ui.theme.CalogoalTheme
-import java.time.LocalDate
-import java.time.Period
-import java.time.format.DateTimeFormatter
-import java.util.Calendar
 import com.calogoal.models.CalculatedCalories
 import com.calogoal.viewmodels.ProfilePageViewModel
 import kotlin.math.roundToInt
+import androidx.compose.ui.graphics.Color
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.calogoal.ui.theme.CalogoalTheme
+import java.time.LocalDate
+import android.app.DatePickerDialog
+import com.calogoal.enums.Sex
+import java.time.format.DateTimeFormatter
+import java.util.Calendar
 
-// Single definition of calculateBMR
+/**
+ * Calculates Basal Metabolic Rate (BMR) using the Mifflin-St Jeor equation.
+ */
 fun calculateBMR(weightKg: Double, heightCm: Double, ageYears: Int, isMale: Boolean): Double {
     return if (isMale) {
         (10 * weightKg) + (6.25 * heightCm) - (5 * ageYears) + 5
@@ -71,69 +71,21 @@ fun calculateBMR(weightKg: Double, heightCm: Double, ageYears: Int, isMale: Bool
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfilePage(
-    navController: NavController,
-    viewModel: CalorieViewModel
-) {
-    val context = LocalContext.current
-    val activity = context as? Activity
-
-    // Load previously saved profile from the ViewModel
-    val savedProfile = viewModel.profile
-
-    // Profile Data State (initialized from saved profile)
-    var name by remember { mutableStateOf(savedProfile.name) }
-    var sex by remember { mutableStateOf(savedProfile.sex) }
-
-    var dateOfBirth by remember { mutableStateOf(savedProfile.dateOfBirth) }
-    val dobFormatter = remember { DateTimeFormatter.ofPattern("MM/dd/yyyy") }
-    val dobDisplayText = dateOfBirth?.format(dobFormatter) ?: "MM/DD/YYYY"
-
-    var heightInInches by remember { mutableStateOf(savedProfile.heightInInches) }
-    var weightInLbs by remember { mutableStateOf(savedProfile.weightInLbs) }
-    var targetWeightInLbs by remember { mutableStateOf(savedProfile.targetWeightInLbs) }
-
-    // Exercise routine from profile
-    var selectedExerciseRoutine by remember { mutableStateOf(savedProfile.exerciseRoutine) }
-
-    // Derived goal + calories
-    val (inferredGoal, targetCaloriesPerDay) = remember(
-        dateOfBirth,
-        heightInInches,
-        weightInLbs,
-        targetWeightInLbs,
-        sex,
-        selectedExerciseRoutine
-    ) {
-        var goal = GoalType.MAINTAIN
-        var calories: Int? = null
-
-        val ageYears = dateOfBirth?.let { dob ->
-            Period.between(dob, LocalDate.now()).years
-        } ?: 0
-
-        val heightInchesVal = heightInInches.toDoubleOrNull() ?: 0.0
-        val currentWeight = weightInLbs.toDoubleOrNull() ?: 0.0
-        val intendedWeight = targetWeightInLbs.toDoubleOrNull()
-
-        // Infer goal from intended vs current weight (with small buffer)
-        if (intendedWeight != null && currentWeight > 0.0) {
-            goal = when {
-                intendedWeight > currentWeight + 2 -> GoalType.GAIN
-                intendedWeight < currentWeight - 2 -> GoalType.LOSE
-                else -> GoalType.MAINTAIN
-            }
 fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
     val activity = LocalContext.current as? Activity
     val uiState = viewModel.uiState.collectAsState().value
+    val context = LocalContext.current
+
+    var sex: Sex = Sex.MALE
+    //var dateOfBirth by remember { mutableStateOf(savedProfile.dateOfBirth) }
+    val dobFormatter = remember { DateTimeFormatter.ofPattern("MM/dd/yyyy") }
+    val dobDisplayText = "12/12/1212"
 
     // --- State Variables for User Input ---
     var isMale by remember { mutableStateOf(true) } // Simple gender toggle for BMR
-
-    // --- State Variables for Goals List ---
-    val goals = remember { mutableStateListOf("Lose 5 kg", "Drink 2L water daily") }
-    var newGoalText by remember { mutableStateOf("") }
+    val fruits = listOf("apple", "banana", "orange")
 
     // --- Derived State for Calorie Recommendation ---
     val calculatedCalories = remember(uiState.age, uiState.height, uiState.weight, isMale) {
@@ -159,20 +111,17 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
         } else {
             null
         }
+    }
 
-        if (ageYears > 0 && heightInchesVal > 0.0 && currentWeight > 0.0) {
-            val weightKg = currentWeight * 0.453592
-            val heightCm = heightInchesVal * 2.54
-
-            val bmr = calculateBMR(weightKg, heightCm, ageYears, sex == Sex.MALE)
-            val maintenanceCalories =
-                (bmr * selectedExerciseRoutine.activityFactor).roundToInt()
-
-            calories = (maintenanceCalories + goal.calorieAdjustment)
-                .coerceAtLeast(1200) // sanity floor
-        }
-
-        goal to calories
+    val calculatedCalorieOutput = calculatedCalories?.let {
+        stringResource(
+            id = R.string.profile_info_calculated,
+            it.bmr,
+            it.sedentary,
+            it.oneToThree,
+            it.fourToFive,
+            it.intenseSixToSeven
+        )
     }
 
     Scaffold(
@@ -181,10 +130,9 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
                 title = {
                     val greeting = stringResource(R.string.greeting)
                     Text(
-                        text = if (name.isBlank()) greeting else "$greeting $name"
+                        text = if (uiState.name.isBlank()) greeting else greeting + uiState.name
                     )
                 },
-                title = { Text(stringResource(R.string.greeting) + " " + uiState.name) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.secondary,
                     titleContentColor = MaterialTheme.colorScheme.secondary,
@@ -277,8 +225,8 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             OutlinedTextField(
-                                value = name,
-                                onValueChange = { name = it },
+                                value = uiState.name,
+                                onValueChange = { newValue -> viewModel.updateName(newValue) },
                                 label = {
                                     Text(
                                         "Name",
@@ -288,12 +236,6 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
                                 modifier = Modifier.weight(2f),
                                 singleLine = true
                             )
-                OutlinedTextField(
-                    value = uiState.name,
-                    onValueChange = { newValue -> viewModel.updateName(newValue) },
-                    label = { stringResource(R.string.name) },
-                    modifier = Modifier.fillMaxWidth()
-                )
 
                             Column(
                                 modifier = Modifier.weight(1f)
@@ -366,7 +308,7 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
                                             val dialog = DatePickerDialog(
                                                 context,
                                                 { _, year, month, dayOfMonth ->
-                                                    dateOfBirth = LocalDate.of(
+                                                    var dateOfBirth = LocalDate.of(
                                                         year,
                                                         month + 1, // DatePickerDialog uses 0-based month
                                                         dayOfMonth
@@ -386,16 +328,16 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
 
                             // Height (inches)
                             StatInputField(
-                                value = heightInInches,
-                                onValueChange = { heightInInches = it },
+                                value = uiState.height,
+                                onValueChange = { newValue -> viewModel.updateHeight(newValue) },
                                 label = "Height (in)",
                                 modifier = Modifier.weight(0.9f)
                             )
 
                             // Weight (lbs)
                             StatInputField(
-                                value = weightInLbs,
-                                onValueChange = { weightInLbs = it },
+                                value = uiState.weight,
+                                onValueChange = { newValue -> viewModel.updateWeight(newValue) },
                                 label = "Weight (lbs)",
                                 modifier = Modifier.weight(0.9f)
                             )
@@ -418,37 +360,6 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    StatInputField(
-                        value = uiState.age.toString(),
-                        onValueChange = { newValue ->
-                            if (newValue.all { it.isDigit() } || newValue.isEmpty()) {
-                                viewModel.updateAge(newValue)
-                            }
-                        },
-                        label = stringResource(R.string.age) + " (yrs)", // TODO change units in settings
-                        modifier = Modifier.weight(1f)
-                    )
-                    StatInputField(
-                        value = uiState.height.toString(),
-                        onValueChange = { newValue ->
-                            if (newValue.all { it.isDigit() } || newValue.isEmpty()) {
-                                viewModel.updateHeight(newValue)
-                            }
-                        },
-                        label = stringResource(R.string.height) + " (cm)",
-                        modifier = Modifier.weight(1f)
-                    )
-                    StatInputField(
-                        value = uiState.weight.toString(),
-                        onValueChange = { newValue ->
-                            if (newValue.all { it.isDigit() } || newValue.isEmpty()) {
-                                viewModel.updateWeight(newValue)
-                            }
-                        },
-                        label = stringResource(R.string.weight) + "(kg)",
-                        modifier = Modifier.weight(1f)
                     )
                 ) {
                     Column(
@@ -459,8 +370,8 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
                     ) {
                         // Intended weight target
                         StatInputField(
-                            value = targetWeightInLbs,
-                            onValueChange = { targetWeightInLbs = it },
+                            value = "PLACEHOLDER",
+                            onValueChange = { it },
                             label = "Intended Weight Target (lbs)",
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -468,18 +379,17 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
                         // Weekly Exercise Routine (enum-backed dropdown)
                         StringDropdownField(
                             label = "Weekly Exercise Routine",
-                            options = ExerciseRoutine.values().map { it.label },
-                            selectedOption = selectedExerciseRoutine.label,
+                            options = fruits,
+                            selectedOption = "PLACEHOLDER",
                             onOptionSelected = { label ->
-                                selectedExerciseRoutine =
-                                    ExerciseRoutine.values().first { it.label == label }
+                                label
                             },
                             modifier = Modifier.fillMaxWidth()
                         )
 
                         // Display inferred goal
                         Text(
-                            text = "Goal: ${inferredGoal.label}",
+                            text = "Goal: PLACEHOLDER",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -507,8 +417,7 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
                         )
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            text = targetCaloriesPerDay?.let { "$it kcal" }
-                                ?: "Enter your profile data and intended weight.",
+                            text = "PLACEHOLDER",
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
@@ -519,23 +428,12 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
             item {
                 Button(
                     onClick = {
-                        val target = targetCaloriesPerDay ?: return@Button
-                        viewModel.updateProfile(
-                            name = name,
-                            sex = sex,
-                            dateOfBirth = dateOfBirth,
-                            heightInInches = heightInInches,
-                            weightInLbs = weightInLbs,
-                            targetWeightInLbs = targetWeightInLbs,
-                            exerciseRoutine = selectedExerciseRoutine,
-                            targetCalories = target,
-                            goalType = inferredGoal.label
-                        )
+
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp),
-                    enabled = name.isNotBlank() && targetCaloriesPerDay != null
+                    //enabled = name.isNotBlank() && targetCaloriesPerDay != null
                 ) {
                     Text("Save Profile")
                 }
@@ -658,7 +556,7 @@ fun ProfilePagePreview() {
     CalogoalTheme {
         ProfilePage(
             navController = rememberNavController(),
-            viewModel = CalorieViewModel()
+            viewModel = hiltViewModel()
         )
     }
 }
