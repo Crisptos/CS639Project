@@ -71,4 +71,5 @@ Calogoal helps users reach their fitness and wellness goals by giving them a cen
 
 ## Github Insights
 -Agile SCRUM Methodology
+
 -Cloud Persistence (Firebase)
