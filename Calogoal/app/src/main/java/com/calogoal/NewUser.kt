@@ -4,11 +4,11 @@ import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.material3.ListItemDefaults.contentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -25,45 +25,53 @@ fun NewUser(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp, vertical = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+                .padding(horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(36.dp))
 
-            // Calogoal Logo
-
-            Image(
-                painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                contentDescription = "Logo",
+            /* Logo */
+            Box(
                 modifier = Modifier
-                    .size(120.dp)
-                    .padding(bottom = 16.dp)
-            )
-            // Title and subtitle
-            Column {
-                Text(
-                    text = "Welcome to Calogoal!",
-                    fontSize = 38.sp,
-                    fontWeight = MaterialTheme.typography.headlineLarge.fontWeight,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 40.sp
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = "Let's get you set up for success.",
-                    fontSize = 20.sp,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 26.sp,
-                    modifier = Modifier.padding(horizontal = 8.dp)
+                    .fillMaxWidth()
+                    .height(220.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.logo),
+                    contentDescription = "CaloGoal Logo",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(0.95f)
                 )
             }
 
-            Spacer(modifier = Modifier.height(60.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-// Getting Started Button
+            Text(
+                text = "Welcome to Calogoal!",
+                fontSize = 34.sp,
+                fontWeight = MaterialTheme.typography.headlineLarge.fontWeight,
+                textAlign = TextAlign.Center,
+                lineHeight = 38.sp,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = "Let’s get you set up for success.",
+                fontSize = 18.sp,
+                textAlign = TextAlign.Center,
+                lineHeight = 24.sp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp)
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
             Button(
                 onClick = {
                     val prefs = context.getSharedPreferences("calogoal_prefs", Context.MODE_PRIVATE)
@@ -76,7 +84,8 @@ fun NewUser(navController: NavController) {
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
+                    .height(56.dp)
+                    .padding(bottom = 24.dp),
                 shape = MaterialTheme.shapes.extraLarge,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFFFA500),
@@ -84,7 +93,7 @@ fun NewUser(navController: NavController) {
                 )
             ) {
                 Text(
-                    "Get Started",
+                    text = "Get Started",
                     fontSize = 20.sp,
                     fontWeight = MaterialTheme.typography.titleLarge.fontWeight
                 )
