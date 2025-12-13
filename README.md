@@ -1,6 +1,8 @@
 # Calogoal
 *This app was created for CS 639 Mobile App Development at Pace University in Fall 2025.*
 
+![Calogoal logo.](Resources/logo.PNG)
+
 ### About this app
 Calogoal helps users reach their fitness and wellness goals by giving them a central hub to track their meals and caloric intake.
 
