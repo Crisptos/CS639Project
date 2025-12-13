@@ -16,9 +16,13 @@ Calogoal helps users reach their fitness and wellness goals by giving them a cen
 
 ## Main Features
 -login
+
 -Meal Tracking
+
 -Progress Visualization (Trend Tracking)
+
 -Personalized Profile Management
+
 -Persistent User Data
 
 ## Get the APK Here!
