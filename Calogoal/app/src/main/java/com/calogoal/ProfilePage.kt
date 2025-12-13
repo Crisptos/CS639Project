@@ -428,7 +428,7 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
             item {
                 Button(
                     onClick = {
-
+                        viewModel.saveCurrentProfileToFirestore()
                     },
                     modifier = Modifier
                         .fillMaxWidth()

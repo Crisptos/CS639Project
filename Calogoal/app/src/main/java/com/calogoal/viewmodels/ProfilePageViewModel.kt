@@ -1,5 +1,6 @@
 package com.calogoal.viewmodels
 
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.calogoal.interfaces.FirestoreService
@@ -38,6 +39,22 @@ class ProfilePageViewModel @Inject constructor(
                 weight = weightValue,
                 height = heightValue
             )
+        }
+    }
+
+    fun saveCurrentProfileToFirestore() {
+        val ageValue: Int = _uiState.value.age.toIntOrNull() ?: 0
+        val weightValue: Int = _uiState.value.weight.toIntOrNull() ?: 0
+        val heightValue: Int = _uiState.value.height.toIntOrNull() ?: 0
+
+        val dataToSave: ProfileDTO = ProfileDTO(
+            name = _uiState.value.name,
+            age = ageValue,
+            weight = weightValue,
+            height = heightValue
+        )
+        viewModelScope.launch {
+            firestoreService.setProfile(dataToSave)
         }
     }
 
