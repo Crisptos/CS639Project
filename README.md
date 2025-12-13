@@ -15,6 +15,11 @@ Calogoal helps users reach their fitness and wellness goals by giving them a cen
 - [Mohammed Yusif](https://github.com/MYNazir)
 
 ## Main Features
+-login
+-Meal Tracking
+-Progress Visualization (Trend Tracking)
+-Personalized Profile Management
+-Persistent User Data
 
 ## Get the APK Here!
 - [Install](Resources/APKs/)
@@ -61,3 +66,5 @@ Calogoal helps users reach their fitness and wellness goals by giving them a cen
 | [Hilt](https://developer.android.com/training/dependency-injection/hilt-android)  | Dependency Injection & View Models |
 
 ## Github Insights
+-Agile SCRUM Methodology
+-Cloud Persistence (Firebase)
