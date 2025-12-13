@@ -66,16 +66,16 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel) {
             // Calogoal Logo
 
             Image(
-                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                painter = painterResource(id = R.drawable.ic_launcher),
                 contentDescription = "Logo",
                 modifier = Modifier
-                    .size(120.dp)
+                    .size(240.dp)
                     .padding(bottom = 16.dp)
             )
             // Title and subtitle
             Column {
                 Text(
-                    text = "Welcome to Calogoal!",
+                    text = "Welcome!",
                     fontSize = 38.sp,
                     fontWeight = MaterialTheme.typography.headlineLarge.fontWeight,
                     textAlign = TextAlign.Center,

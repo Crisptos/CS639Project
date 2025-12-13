@@ -1,16 +1,33 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.calogoal
 
 import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
-import androidx.compose.material3.ListItemDefaults.contentColor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -20,18 +37,21 @@ import androidx.navigation.NavController
 fun NewUser(navController: NavController) {
     val context = LocalContext.current
 
+    var email by rememberSaveable { mutableStateOf("") }
+    var password by rememberSaveable { mutableStateOf("") }
+
+    val emailFocusRequester = FocusRequester()
+    val passwordFocusRequester = FocusRequester()
+
     Scaffold { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(horizontal = 16.dp, vertical = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(40.dp))
-
-            // Calogoal Logo
 
             Image(
                 painter = painterResource(id = R.drawable.ic_launcher_foreground),
@@ -40,12 +60,12 @@ fun NewUser(navController: NavController) {
                     .size(120.dp)
                     .padding(bottom = 16.dp)
             )
-            // Title and subtitle
-            Column {
+
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = "Welcome to Calogoal!",
                     fontSize = 38.sp,
-                    fontWeight = MaterialTheme.typography.headlineLarge.fontWeight,
+                    fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
                     lineHeight = 40.sp
                 )
@@ -61,9 +81,46 @@ fun NewUser(navController: NavController) {
                 )
             }
 
-            Spacer(modifier = Modifier.height(60.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
-// Getting Started Button
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(emailFocusRequester)
+                    .onPreviewKeyEvent { event ->
+                        if (event.type == KeyEventType.KeyDown && event.key == Key.Tab) {
+                            passwordFocusRequester.requestFocus()
+                            true
+                        } else {
+                            false
+                        }
+                    },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(
+                    onNext = { passwordFocusRequester.requestFocus() }
+                )
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(passwordFocusRequester),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             Button(
                 onClick = {
                     val prefs = context.getSharedPreferences("calogoal_prefs", Context.MODE_PRIVATE)
@@ -84,11 +141,13 @@ fun NewUser(navController: NavController) {
                 )
             ) {
                 Text(
-                    "Get Started",
+                    text = "Get Started",
                     fontSize = 20.sp,
-                    fontWeight = MaterialTheme.typography.titleLarge.fontWeight
+                    fontWeight = FontWeight.SemiBold
                 )
             }
+
+            Spacer(modifier = Modifier.weight(1f))
         }
     }
 }
