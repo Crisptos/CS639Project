@@ -22,6 +22,7 @@ import androidx.navigation.compose.composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.calogoal.services.FirestoreServiceImpl
 import com.calogoal.viewmodels.LoginViewModel
+import com.calogoal.viewmodels.MealTrackerViewModel
 import com.calogoal.viewmodels.ProfilePageViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -66,7 +67,7 @@ fun Calogoal(startDestination: String) {
 
                 // Meal Tracking Screen
                 composable(Screen.MealTracking.route) {
-                    val vm: CalorieViewModel = hiltViewModel()
+                    val vm: MealTrackerViewModel = hiltViewModel()
                     MealTracker(navController, vm)
                 }
                 // Trend Tracking Screen

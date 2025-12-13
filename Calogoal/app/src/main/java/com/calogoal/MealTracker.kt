@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,74 +29,31 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.calogoal.enums.TimeOfMeal
 import com.calogoal.models.TrackedFood
+import com.calogoal.viewmodels.MealTrackerViewModel
+import com.calogoal.viewmodels.ProfilePageViewModel
+import com.calogoal.viewmodels.TrackedMealUiState
+import java.time.LocalDate
 
-@SuppressLint("ContextCastToActivity")
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MealTracker(
-    navController: NavController,
-    viewModel: CalorieViewModel
-) {
+fun MealTracker(navController: NavController, viewModel: MealTrackerViewModel) {
     val activity = androidx.compose.ui.platform.LocalContext.current as? Activity
-
-    // Local list of tracked foods for this screen
-    var trackedFoods by remember {
-        mutableStateOf(
-            listOf(
-                TrackedFood(
-                    label = "Toast",
-                    calories = 167,
-                    protein = 5,
-                    fat = 40,
-                    carbs = 2,
-                    mealType = TimeOfMeal.Breakfast
-                ),
-                TrackedFood(
-                    label = "Eggs",
-                    calories = 100,
-                    protein = 8,
-                    fat = 6,
-                    carbs = 0,
-                    mealType = TimeOfMeal.Breakfast
-                ),
-                TrackedFood(
-                    label = "Orange",
-                    calories = 55,
-                    protein = 1,
-                    fat = 0,
-                    carbs = 12,
-                    mealType = TimeOfMeal.Snack
-                ),
-                TrackedFood(
-                    label = "Sausage",
-                    calories = 212,
-                    protein = 9,
-                    fat = 18,
-                    carbs = 2,
-                    mealType = TimeOfMeal.Breakfast
-                ),
-                TrackedFood(
-                    label = "Milk",
-                    calories = 130,
-                    protein = 8,
-                    fat = 5,
-                    carbs = 14,
-                    mealType = TimeOfMeal.Breakfast
-                )
-            )
-        )
-    }
+    val uiState = viewModel.uiState.collectAsState().value
+    val context = LocalContext.current
 
     Scaffold(
         bottomBar = {
@@ -147,12 +105,15 @@ fun MealTracker(
             // Food Input Form
             FoodInputForm(
                 onFoodAdded = { newFood ->
-                    // Update local UI list
-                    trackedFoods = trackedFoods + newFood
-                    // Also record in shared ViewModel so Trend screen sees it
                     viewModel.addMeal(
-                        description = newFood.label,
-                        calories = newFood.calories
+                        TrackedMealUiState(
+                            label = newFood.label,
+                            calories = newFood.calories,
+                            protein = newFood.protein,
+                            carbs = newFood.carbs,
+                            timeOfMealType = newFood.timeOfMealType,
+                            dateEaten = LocalDate.now()
+                        )
                     )
                 }
             )
@@ -164,32 +125,32 @@ fun MealTracker(
             // Meal Tracking Display (all four sections)
             MealSection(
                 title = TimeOfMeal.Breakfast,
-                items = trackedFoods.filter { it.mealType == TimeOfMeal.Breakfast }
+                items = uiState.breakfast
             )
             Spacer(modifier = Modifier.height(24.dp))
 
             MealSection(
                 title = TimeOfMeal.Lunch,
-                items = trackedFoods.filter { it.mealType == TimeOfMeal.Lunch }
+                items = uiState.lunch
             )
             Spacer(modifier = Modifier.height(24.dp))
 
             MealSection(
                 title = TimeOfMeal.Dinner,
-                items = trackedFoods.filter { it.mealType == TimeOfMeal.Dinner }
+                items = uiState.dinner
             )
             Spacer(modifier = Modifier.height(24.dp))
 
             MealSection(
                 title = TimeOfMeal.Snack,
-                items = trackedFoods.filter { it.mealType == TimeOfMeal.Snack }
+                items = uiState.snacks
             )
         }
     }
 }
 
 @Composable
-fun FoodInputForm(onFoodAdded: (TrackedFood) -> Unit) {
+fun FoodInputForm(onFoodAdded: (TrackedMealUiState) -> Unit) {
     var foodNameInput by remember { mutableStateOf("") }
     var caloriesInput by remember { mutableStateOf("") }
     var selectedMeal by remember { mutableStateOf(TimeOfMeal.Breakfast) }
@@ -254,13 +215,13 @@ fun FoodInputForm(onFoodAdded: (TrackedFood) -> Unit) {
                 val calories = caloriesInput.toIntOrNull()
 
                 if (name.isNotEmpty() && calories != null && calories > 0) {
-                    val newFood = TrackedFood(
+                    val newFood = TrackedMealUiState(
                         label = name,
                         calories = calories,
                         protein = 0,
                         carbs = 0,
                         fat = 0,
-                        mealType = selectedMeal
+                        timeOfMealType = selectedMeal
                     )
                     onFoodAdded(newFood)
 
@@ -280,7 +241,7 @@ fun FoodInputForm(onFoodAdded: (TrackedFood) -> Unit) {
 @Composable
 fun MealSection(
     title: TimeOfMeal,
-    items: List<TrackedFood>,
+    items: List<TrackedMealUiState>,
 ) {
     val totalCalories = items.sumOf { it.calories }
     val unitKcal = stringResource(R.string.unit_kcal)
