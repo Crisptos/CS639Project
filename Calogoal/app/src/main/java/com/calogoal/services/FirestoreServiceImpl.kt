@@ -88,8 +88,8 @@ class FirestoreServiceImpl @Inject constructor(
                 "fat" to meal.fat,
                 "label" to meal.label,
                 "protein" to meal.protein,
-                "mealType" to meal.mealType,
-                "createdAt" to FieldValue.serverTimestamp()
+                "timeOfMealType" to meal.timeOfMealType,
+                "dateEaten" to FieldValue.serverTimestamp()
             )
 
             batch.set(docRef, dataToSave)
@@ -109,8 +109,8 @@ class FirestoreServiceImpl @Inject constructor(
             "fat" to meal.fat,
             "label" to meal.label,
             "protein" to meal.protein,
-            "mealType" to meal.mealType,
-            "createdAt" to FieldValue.serverTimestamp()
+            "timeOfMealType" to meal.timeOfMealType,
+            "dateEaten" to FieldValue.serverTimestamp()
         )
 
         userMealsRef.add(dataToSave).await()

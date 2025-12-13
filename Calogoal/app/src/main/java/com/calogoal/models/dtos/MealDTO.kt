@@ -8,8 +8,7 @@ data class MealDTO(
     val carbs: Int = 0,
     val fat: Int = 0,
     val label: String = "",
-    val mealType: Int = 0,
+    val timeOfMealType: Int = 0,
     val protein: Int = 0,
-    @get:PropertyName("createdAt")
-    val createdAt: Timestamp? = null,
+    val dateEaten: Long = 0L,
 )
