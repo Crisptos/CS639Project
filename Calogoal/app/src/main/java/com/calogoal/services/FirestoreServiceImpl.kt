@@ -46,9 +46,11 @@ class FirestoreServiceImpl @Inject constructor(
 
         val dataToSave = mapOf(
             "name" to profile.name,
+            "dateOfBirth" to profile.dateOfBirth,
             "age" to profile.age,
             "weight" to profile.weight,
-            "height" to profile.height
+            "height" to profile.height,
+            "sex" to profile.sex
         )
 
         userProfileRef.set(dataToSave).await()

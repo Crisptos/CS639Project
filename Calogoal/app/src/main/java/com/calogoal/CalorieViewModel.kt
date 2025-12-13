@@ -12,7 +12,7 @@ import java.time.LocalDate
 // All profile data we want to persist
 data class Profile(
     val name: String = "",
-    val sex: Sex = Sex.MALE,
+    val sex: Sex = Sex.Male,
     val dateOfBirth: LocalDate? = null,
     val heightInInches: String = "",
     val weightInLbs: String = "",
