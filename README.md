@@ -15,6 +15,7 @@ Calogoal helps users reach their fitness and wellness goals by giving them a cen
 ## Main Features
 
 ## Get the APK Here!
+- [Install](Resources/APKs/)
 
 ## Design Prototypes
 - [Prototype Screenshots](Resources/Screenshots/Prototypes/)
@@ -28,11 +29,33 @@ Calogoal helps users reach their fitness and wellness goals by giving them a cen
 - [Sprint 2 Demo Video]()
 - [Sprint 2 Retro]()
 
+## Firestore Database Schema
+```
+└── users/
+    ├── [unique UID]/
+    ├── [unique UID]/
+    └── [unique UID]/
+        ├── dateOfBirth
+        ├── height
+        ├── weight
+        ├── name
+        ├── sex
+        └── meals/
+            └── [unique meal ID]/
+                ├── label
+                ├── calories
+                ├── protein
+                ├── fat
+                └── carbs
+```
+
 ## Technologies Used
 | Library | Use |
 |:-------------|:---------------|
 | [Jetpack Compose](https://developer.android.com/jetpack/compose) | Declarative UI Toolkit |
 | [MPAndroidChart](https://github.com/PhilJay/MPAndroidChart) | Charts |
 | [Material Design 3](https://m3.material.io/develop/android/compose)  | UI Components |
+| [Firebase](https://firebase.google.com/docs/firestore)  | User Logins and Database |
+| [Hilt](https://developer.android.com/training/dependency-injection/hilt-android)  | Dependency Injection & View Models |
 
 ## Github Insights
