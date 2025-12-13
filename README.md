@@ -25,10 +25,12 @@ Calogoal helps users reach their fitness and wellness goals by giving them a cen
 - [Install](Resources/APKs/)
 
 ## App Screenshots
-<img src="Resources/Screenshots/Final/login.png" width="20%">
-<img src="Resources/Screenshots/Final/profile.png" width="20%">
-<img src="Resources/Screenshots/Final/mealtrack.png" width="20%">
-<img src="Resources/Screenshots/Final/trend.png" width="20%">
+<p align="center">
+    <img src="Resources/Screenshots/Final/login.png" width="20%">
+    <img src="Resources/Screenshots/Final/profile.png" width="20%">
+    <img src="Resources/Screenshots/Final/mealtrack.png" width="20%">
+    <img src="Resources/Screenshots/Final/trend.png" width="20%">
+</p>
 
 ## Design Prototypes
 - [Prototype Screenshots](Resources/Screenshots/Prototypes/)
@@ -75,4 +77,4 @@ Calogoal helps users reach their fitness and wellness goals by giving them a cen
 | [Hilt](https://developer.android.com/training/dependency-injection/hilt-android)  | Dependency Injection & View Models |
 
 ## Github Insights
-![Insights.](Resources/insights.PNG)
+<img src="Resources/insights.png">
