@@ -1,13 +1,24 @@
 package com.calogoal
 
+import android.annotation.SuppressLint
 import android.app.Activity
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -16,8 +27,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,7 +34,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -33,22 +41,58 @@ import androidx.navigation.NavController
 import com.calogoal.enums.TimeOfMeal
 import com.calogoal.models.TrackedFood
 
+@SuppressLint("ContextCastToActivity")
 @Composable
 fun MealTracker(
     navController: NavController,
     viewModel: CalorieViewModel
 ) {
-    val activity = LocalContext.current as? Activity
+    val activity = androidx.compose.ui.platform.LocalContext.current as? Activity
 
     // Local list of tracked foods for this screen
     var trackedFoods by remember {
         mutableStateOf(
             listOf(
-                TrackedFood("Toast", 167, 5, 40, 2, TimeOfMeal.Breakfast),
-                TrackedFood("Eggs", 100, 8, 6, 0, TimeOfMeal.Breakfast),
-                TrackedFood("Orange", 55, 1, 0, 12, TimeOfMeal.Snack),
-                TrackedFood("Sausage", 212, 9, 18, 2, TimeOfMeal.Breakfast),
-                TrackedFood("Milk", 130, 8, 5, 14, TimeOfMeal.Breakfast)
+                TrackedFood(
+                    label = "Toast",
+                    calories = 167,
+                    protein = 5,
+                    fat = 40,
+                    carbs = 2,
+                    mealType = TimeOfMeal.Breakfast
+                ),
+                TrackedFood(
+                    label = "Eggs",
+                    calories = 100,
+                    protein = 8,
+                    fat = 6,
+                    carbs = 0,
+                    mealType = TimeOfMeal.Breakfast
+                ),
+                TrackedFood(
+                    label = "Orange",
+                    calories = 55,
+                    protein = 1,
+                    fat = 0,
+                    carbs = 12,
+                    mealType = TimeOfMeal.Snack
+                ),
+                TrackedFood(
+                    label = "Sausage",
+                    calories = 212,
+                    protein = 9,
+                    fat = 18,
+                    carbs = 2,
+                    mealType = TimeOfMeal.Breakfast
+                ),
+                TrackedFood(
+                    label = "Milk",
+                    calories = 130,
+                    protein = 8,
+                    fat = 5,
+                    carbs = 14,
+                    mealType = TimeOfMeal.Breakfast
+                )
             )
         )
     }
