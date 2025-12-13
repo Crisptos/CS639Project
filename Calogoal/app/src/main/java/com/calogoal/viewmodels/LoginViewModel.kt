@@ -35,6 +35,7 @@ class LoginViewModel : ViewModel() {
             accountService.authenticate(email, password)
 
             _loginStatus.value = LoginStatus(success = true)
+            Log.d("Calogoal Login", "Successful login with email: $email")
         } catch (e: Exception)
         {
             _loginStatus.value = LoginStatus(error = e.message)

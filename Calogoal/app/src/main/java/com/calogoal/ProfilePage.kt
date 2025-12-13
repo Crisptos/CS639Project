@@ -78,10 +78,9 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
     val uiState = viewModel.uiState.collectAsState().value
     val context = LocalContext.current
 
-    var sex: Sex = Sex.MALE
-    //var dateOfBirth by remember { mutableStateOf(savedProfile.dateOfBirth) }
-    val dobFormatter = remember { DateTimeFormatter.ofPattern("MM/dd/yyyy") }
-    val dobDisplayText = "12/12/1212"
+    val dobFormatter = remember {
+        DateTimeFormatter.ofPattern("MM/dd/yyyy")
+    }
 
     // --- State Variables for User Input ---
     var isMale by remember { mutableStateOf(true) } // Simple gender toggle for BMR
@@ -193,7 +192,7 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    GenderAvatar(isMale = sex == Sex.MALE)
+                    GenderAvatar(isMale = uiState.sex == Sex.Male)
                     Spacer(Modifier.height(8.dp))
                     Text(
                         text = "Profile Data",
@@ -249,13 +248,13 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
                                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
                                     FilterChip(
-                                        selected = sex == Sex.MALE,
-                                        onClick = { sex = Sex.MALE },
+                                        selected = uiState.sex == Sex.Male,
+                                        onClick = { viewModel.updateSex(Sex.Male) },
                                         label = { Text("M") }
                                     )
                                     FilterChip(
-                                        selected = sex == Sex.FEMALE,
-                                        onClick = { sex = Sex.FEMALE },
+                                        selected = uiState.sex == Sex.Female,
+                                        onClick = { viewModel.updateSex(Sex.Female) },
                                         label = { Text("F") }
                                     )
                                 }
@@ -273,7 +272,9 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
                                 modifier = Modifier.weight(1.3f)
                             ) {
                                 OutlinedTextField(
-                                    value = dobDisplayText,
+                                    value = uiState.dateOfBirth
+                                        ?.format(dobFormatter)
+                                        ?: "",
                                     onValueChange = { /* read-only */ },
                                     label = {
                                         Text(
@@ -307,11 +308,9 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
 
                                             val dialog = DatePickerDialog(
                                                 context,
-                                                { _, year, month, dayOfMonth ->
-                                                    var dateOfBirth = LocalDate.of(
-                                                        year,
-                                                        month + 1, // DatePickerDialog uses 0-based month
-                                                        dayOfMonth
+                                                { _, year, month, day ->
+                                                    viewModel.updateDateOfBirth(
+                                                        LocalDate.of(year, month + 1, day)
                                                     )
                                                 },
                                                 now.year,
@@ -428,7 +427,7 @@ fun ProfilePage(navController: NavController, viewModel: ProfilePageViewModel) {
             item {
                 Button(
                     onClick = {
-
+                        viewModel.saveCurrentProfileToFirestore()
                     },
                     modifier = Modifier
                         .fillMaxWidth()
